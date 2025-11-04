@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ska Digital Hub CRM</title>
+  <!-- Bootstrap 5 + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
+    .navbar-brand { font-weight:600; }
+    .card-header { background:#212529; color:#fff; }
+    .flag-red { background:#dc3545 !important; color:#fff; }
+    .flag-yellow{ background:#ffc107 !important; color:#212529; }
+    .flag-green { background:#198754 !important; color:#fff; }
+    .dashboard-card { transition:transform .2s; }
+    .dashboard-card:hover { transform:translateY(-4px); }
+    .activity-list { max-height:220px; overflow-y:auto; }
+    .activity-item { font-size:0.9rem; }
+    .nav-link.active { background:#495057; font-weight:600; }
+    .export-btns { margin-bottom: 1rem; }
+    .action-btn { margin: 0 2px; font-size: 0.9em; }
+    .message-tab { cursor: pointer; padding: 8px 16px; border-bottom: 2px solid transparent; }
+    .message-tab.active { border-bottom: 2px solid #0d6efd; font-weight:600; }
+    .table th, .table td { vertical-align: middle; }
+    .filter-bar { background:#fff; border-radius:8px; padding:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    .filter-input { max-width:300px; }
+    /* PDF-only Table */
+    .pdf-table { display: none; }
+    .pdf-table.show { display: table; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+<header class="bg-dark text-white text-center py-3 mb-4">
+  <h1 class="mb-0">Ska Digital Hub CRM</h1>
+</header>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Menu</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" onclick="showSection('dashboard')">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('clients')">Clients</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('projects')">Projects</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('payments')">Payments</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('todos')">Todo List</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('project-tracking')">Project Tracking</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('messages')">Messages</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- ==================== DASHBOARD ==================== -->
+  <section id="dashboard" class="mb-5">
+    <h2 class="mb-4">Overview Dashboard</h2>
+    <div class="row g-4" id="dashboardContent"></div>
+    <div class="card mt-5 shadow-sm">
+      <div class="card-header">Recent Activity</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush activity-list" id="activityList">
+          <li class="list-group-item text-center text-muted">Loading…</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CLIENTS ==================== -->
+  <section id="clients" class="mb-5" style="display:none;">
+    <div class="card shadow-sm">
+      <div class="card-header">Client Details</div>
+      <div class="card-body" id="clientForm">
+        <input type="hidden" id="clientId">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Name <input class="form-control" id="clientName" required></label></div>
+          <div class="col-md-6"><label class="form-label">Company <input class="form-control" id="clientCompany" required></label></div>
+          <div class="col-md-6"><label class="form-label">Contact <input class="form-control" id="clientContact" required></label></div>
+          <div class="col-md-6"><label class="form-label">Email <input class="form-control" type="email" id="clientEmail" required></label></div>
+          <div class="col-md-6"><label class="form-label">Product/Service <input class="form-control" id="clientProduct" required></label></div>
+          <div class="col-md-6"><label class="form-label">Status
+            <select class="form-select" id="clientStatus" required>
+              <option value="scout">Scout</option>
+              <option value="contacted">Contacted</option>
+              <option value="hold">Hold</option>
+              <option value="interested">Interested</option>
+              <option value="not interested">Not Interested</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label></div>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" onclick="saveClient()">Save Client</button>
+        <button type="button" class="btn btn-secondary mt-3" onclick="resetClientForm()">Clear Form</button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterClients" placeholder="Search clients..." onkeyup="filterTable('clients')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="statusFilter" onchange="filterTable('clients')">
+          <option value="">All Status</option>
+          <option>scout</option><option>contacted</option><option>hold</option>
+          <option>interested</option><option>not interested</option><option>negotiation</option><option>closed</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('clients')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('clients')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Clients List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="clientsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr>
+              <th>ID</th><th>Name</th><th>Company</th><th>Contact</th><th>Email</th><th>Product/Service</th><th>Status</th><th class="no-print">Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Other sections remain the same -->
+  <!-- ==================== PROJECTS ==================== -->
+  <section id="projects" class="mb-5" style="display:none;">
+    <div class="card shadow-sm">
+      <div class="card-header">Project Details</div>
+      <div class="card-body" id="projectForm">
+        <input type="hidden" id="projectId">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Name <input class="form-control" id="projectName" required></label></div>
+          <div class="col-md-6"><label class="form-label">Client ID <input class="form-control" id="projectClientId" required></label></div>
+          <div class="col-12"><label class="form-label">Description <input class="form-control" id="projectDesc" required></label></div>
+          <div class="col-md-4"><label class="form-label">Start Date <input class="form-control" type="date" id="projectStart" required></label></div>
+          <div class="col-md-4"><label class="form-label">End Date <input class="form-control" type="date" id="projectEnd"></label></div>
+          <div class="col-md-4"><label class="form-label">Status <input class="form-control" id="projectStatus" required></label></div>
+          <div class="col-md-4"><label class="form-label">Total Charged <input class="form-control" type="number" step="0.01" id="projectCharged" required></label></div>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" onclick="saveProject()">Save Project</button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterProjects" placeholder="Search projects..." onkeyup="filterTable('projects')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="projectStatusFilter" onchange="filterTable('projects')">
+          <option value="">All Status</option>
+          <option>In Progress</option><option>Planning</option><option>Active</option><option>Closed</option><option>Completed</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('projects')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('projects')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Projects Overview
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="projectsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr>
+              <th>ID</th><th>Name</th><th>Client ID</th><th>Desc</th><th>Start</th><th>End</th><th>Status</th>
+              <th>Charged</th><th>Paid</th><th>Balance</th><th>Pay %</th>
+              <th>Stage</th><th>Progress %</th><th class="no-print">Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PAYMENTS ==================== -->
+  <section id="payments" class="mb-5" style="display:none;">
+    <div class="card shadow-sm">
+      <div class="card-header">Add Payment</div>
+      <div class="card-body" id="paymentForm">
+        <input type="hidden" id="paymentId">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Project ID <input class="form-control" id="paymentProjectId" required></label></div>
+          <div class="col-md-4"><label class="form-label">Amount <input class="form-control" type="number" step="0.01" id="paymentAmount" required></label></div>
+          <div class="col-md-4"><label class="form-label">Date <input class="form-control" type="date" id="paymentDate" required></label></div>
+          <div class="col-md-4"><label class="form-label">Status
+            <select class="form-select" id="paymentStatus" required>
+              <option>Pending</option><option>Paid</option>
+            </select>
+          </label></div>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" onclick="savePayment()">Save Payment</button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterPayments" placeholder="Search payments..." onkeyup="filterTable('payments')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="paymentStatusFilter" onchange="filterTable('payments')">
+          <option value="">All Status</option>
+          <option>Pending</option><option>Paid</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('payments')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('payments')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Payments List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="paymentsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Project ID</th><th>Amount</th><th>Date</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TODO LIST ==================== -->
+  <section id="todos" class="mb-5" style="display:none;">
+    <div class="card shadow-sm">
+      <div class="card-header">Todo</div>
+      <div class="card-body" id="todoForm">
+        <input type="hidden" id="todoId">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Task <input class="form-control" id="todoTask" required></label></div>
+          <div class="col-md-4"><label class="form-label">Due Date <input class="form-control" type="date" id="todoDue"></label></div>
+          <div class="col-md-2 d-flex align-items-center"><label class="form-label mb-0"><input type="checkbox" id="todoDone"> Done</label></div>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" onclick="saveTodo()">Save Todo</button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterTodos" placeholder="Search tasks..." onkeyup="filterTable('todos')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="todoStatusFilter" onchange="filterTable('todos')">
+          <option value="">All</option>
+          <option>Pending</option><option>Done</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('todos')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('todos')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Todo List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="todosTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Task</th><th>Due</th><th>Done</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROJECT TRACKING ==================== -->
+  <section id="project-tracking" class="mb-5" style="display:none;">
+    <div class="card shadow-sm">
+      <div class="card-header">Track Milestone / Stage</div>
+      <div class="card-body" id="trackingForm">
+        <input type="hidden" id="trackingId">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Project ID <input class="form-control" id="trackingProjectId" required></label></div>
+          <div class="col-md-4"><label class="form-label">Stage
+            <select class="form-select" id="trackingStage" required>
+              <option value="">-- select --</option>
+              <option value="1">1 - Planning</option>
+              <option value="2">2 - Design</option>
+              <option value="3">3 - Development</option>
+              <option value="4">4 - Testing</option>
+              <option value="5">5 - Deployment</option>
+            </select>
+          </label></div>
+          <div class="col-md-4"><label class="form-label">Notes <input class="form-control" id="trackingNotes"></label></div>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" onclick="saveTracking()">Save Tracking</button>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterTracking" placeholder="Search project ID or notes..." onkeyup="filterTable('project-tracking')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="stageFilter" onchange="filterTable('project-tracking')">
+          <option value="">All Stages</option>
+          <option value="1">Planning</option><option value="2">Design</option>
+          <option value="3">Development</option><option value="4">Testing</option><option value="5">Deployment</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('project-tracking')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('project-tracking')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Tracking Records
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="trackingTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Project ID</th><th>Stage</th><th>Notes</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MESSAGES ==================== -->
+  <section id="messages" class="mb-5" style="display:none;">
+    <h2 class="mb-4">Messages Center</h2>
+
+    <div class="d-flex mb-3">
+      <div class="me-3 message-tab active" data-filter="balance">Clients with Balance</div>
+      <div class="me-3 message-tab" data-filter="completed">Completed Projects</div>
+      <div class="message-tab" data-filter="new">New Clients</div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterMessages" placeholder="Search clients..." onkeyup="filterMessages()">
+      <button class="btn btn-primary" onclick="openMessageModal()">Send Message</button>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Message Clients
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="messageClientsTable" class="table table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Name</th><th>Company</th><th>Contact</th><th>Email</th><th>Balance</th><th>Status</th><th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<!-- Email Modal (per row) -->
+<div class="modal fade" id="emailModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="emailRecipient">
+        <div class="mb-3"><label>To:</label><input type="email" class="form-control" id="emailTo" readonly></div>
+        <div class="mb-3"><label>Subject:</label><input type="text" class="form-control" id="emailSubject"></div>
+        <div class="mb-3"><label>Message:</label><textarea class="form-control" id="emailBody" rows="5"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="sendEmail()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Modal (Messages tab) -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Message to <span id="msgClientName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" id="msgTypeTabs">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabEmail">Email</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabWhatsApp">WhatsApp</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabSMS">SMS</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tabEmail">
+            <input type="hidden" id="msgEmail">
+            <div class="mb-3"><label>Subject:</label><input type="text" class="form-control" id="msgEmailSubject"></div>
+            <div class="mb-3"><label>Message:</label><textarea class="form-control" id="msgEmailBody" rows="6"></textarea></div>
+          </div>
+          <div class="tab-pane fade" id="tabWhatsApp">
+            <input type="hidden" id="msgWhatsAppPhone">
+            <div class="mb-3"><label>Message:</label><textarea class="form-control" id="msgWhatsAppText" rows="6"></textarea></div>
+          </div>
+          <div class="tab-pane fade" id="tabSMS">
+            <input type="hidden" id="msgSMSPhone">
+            <div class="mb-3"><label>Message (160 chars):</label><textarea class="form-control" id="msgSMSText" rows="4" maxlength="160"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="sendActiveMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div style="background: blue; color: white">
+  <a href="input.html">Next</a>
+</div>
+  
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ==== CONFIG ====
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOJQSRAXcVsHWoUQHlQYVLSt202_UNFtJ3KUkgeE165eBzw_LDVN3WumibZqI5e7_OSw/exec';
+  const STAGE_PROGRESS = {1:20, 2:40, 3:60, 4:80, 5:100};
+  const STAGE_NAME = {1:'Planning',2:'Design',3:'Development',4:'Testing',5:'Deployment'};
+  let clientsData = [], projectsData = [], paymentsData = [], selectedClient = null;
+
+  // ==== MENU & SECTION HANDLING ====
+  function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = 'block';
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`.nav-link[onclick="showSection('${id}')"]`)?.classList.add('active');
+
+    if (id === 'dashboard') loadDashboard();
+    else if (id === 'messages') loadMessages();
+    else loadData(id);
+  }
+
+  // ==== FETCH SHEET (READ GET) ====
+  async function fetchSheet(sheet) {
+    try {
+      console.log(`Fetching ${sheet} from ${SCRIPT_URL}?action=read&sheet=${sheet}`);
+      const r = await fetch(`${SCRIPT_URL}?action=read&sheet=${sheet}`);
+      if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+      const data = await r.json();
+      console.log(`Fetched ${sheet}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Error fetching ${sheet}:`, error);
+      alert(`Error loading ${sheet}: ${error.message}. Please check your Google Apps Script URL and deployment.`);
+      return [];
+    }
+  }
+
+  // ==== UNIVERSAL POST HELPER (uses JSON) ====
+  async function postToScript(payload) {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('postToScript error', err, payload);
+      return { error: err.message || err.toString() };
+    }
+  }
+
+  // ==== FILTER TABLE (ALL SECTIONS) ====
+  function filterTable(section) {
+    const searchInputId = `filter${section.charAt(0).toUpperCase() + section.slice(1)}`;
+    const search = document.getElementById(searchInputId)?.value.toLowerCase() || '';
+    const tbody = document.querySelector(`#${section}Table tbody`);
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    let filterValue = '';
+
+    if (section === 'clients') filterValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
+    else if (section === 'projects') filterValue = document.getElementById('projectStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'payments') filterValue = document.getElementById('paymentStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'todos') filterValue = document.getElementById('todoStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'project-tracking') filterValue = document.getElementById('stageFilter')?.value || '';
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const statusCell = row.cells[
+        section === 'project-tracking' ? 2 :
+        section === 'todos' ? 3 :
+        section === 'payments' ? 4 : 6
+      ];
+      const status = statusCell ? statusCell.textContent.toLowerCase() : '';
+      const matchesSearch = text.includes(search);
+      const matchesFilter = !filterValue || status.includes(filterValue);
+      row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+    });
+  }
+
+  function filterMessages() {
+    const search = document.getElementById('filterMessages')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#messageClientsTable tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
+    });
+  }
+
+  // ==== LOAD DATA (WITH FILTER RESET) ====
+  async function loadData(section) {
+    const sheet = getSheetName(section);
+    const data = await fetchSheet(sheet);
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (section === 'clients') data.forEach(row => renderClientRow(row, tbody));
+    else if (section === 'projects') {
+      const pays = await fetchSheet('Payments');
+      const tracks = await fetchSheet('ProjectTracking');
+      data.forEach(row => renderProjectRow(row, pays, tracks, tbody));
+    } else if (section === 'todos') data.forEach(row => renderTodoRow(row, tbody));
+    else data.forEach(row => renderGenericRow(row, section, tbody));
+
+    // Reset filters
+    const input = document.getElementById(`filter${section.charAt(0).toUpperCase() + section.slice(1)}`);
+    if (input) input.value = '';
+    const select = document.querySelector(`#${section} select[onchange]`);
+    if (select) select.value = '';
+    filterTable(section);
+  }
+
+  function getSheetName(sec) {
+    const map = { clients:'Clients', projects:'Projects', payments:'Payments', todos:'Todos', 'project-tracking':'ProjectTracking' };
+    return map[sec];
+  }
+
+  // ==== RENDER ROWS ====
+  function renderClientRow(row, tbody) {
+    // guard for unexpected row shape
+    const [id = '', name = '', company = '', contact = '', email = '', product = '', status = ''] = row || [];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(company)}</td><td>${escapeHtml(contact)}</td><td>${escapeHtml(email)}</td><td>${escapeHtml(product)}</td><td>${escapeHtml(status)}</td>
+      <td class="no-print">
+        <button class="btn btn-sm btn-info me-1" onclick="editClient(${id})">Edit</button>
+        <button class="btn btn-sm btn-danger me-1" onclick="deleteItem('clients', ${id})">Del</button>
+        <button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(email)}', '${escapeAttr(name)}')">Email</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
+  async function renderProjectRow(row, pays, tracks, tbody) {
+    const [id = '', name = '', clientId = '', desc = '', start = '', end = '', status = '', charged = 0] = row || [];
+    const client = clientsData.find(c => c[0] == clientId) || [];
+    const clientName = client[1] || 'Unknown';
+    const clientEmail = client[4] || '';
+    const paid = (pays || []).filter(p => p[1] == id && p[4] === 'Paid').reduce((s,p) => s + Number(p[2] || 0), 0);
+    const balance = Number(charged || 0) - paid;
+    const payPct = charged > 0 ? (paid / charged) * 100 : 0;
+    const payClass = payPct >= 100 ? 'flag-green' : payPct >= 50 ? 'flag-yellow' : 'flag-red';
+    const track = (tracks || []).filter(t => t[1] == id).sort((a,b) => b[2] - a[2])[0];
+    const stage = track ? Number(track[2]) : 0;
+    const progPct = STAGE_PROGRESS[stage] || 0;
+    const progClass = progPct >= 100 ? 'flag-green' : progPct >= 50 ? 'flag-yellow' : 'flag-red';
+    const stageName = STAGE_NAME[stage] || 'Not Started';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(clientId)}</td><td>${escapeHtml(desc)}</td><td>${escapeHtml(start)}</td><td>${escapeHtml(end)}</td><td>${escapeHtml(status)}</td>
+      <td>${charged}</td><td>${paid.toFixed(2)}</td><td>${balance.toFixed(2)}</td>
+      <td><span class="${payClass} px-2 rounded">${payPct.toFixed(1)}%</span></td>
+      <td>${escapeHtml(stageName)}</td><td><span class="${progClass} px-2 rounded">${progPct}%</span></td>
+      <td class="no-print">
+        <button class="btn btn-sm btn-info me-1" onclick="editItem('projects', this.closest('tr'))">Edit</button>
+        <button class="btn btn-sm btn-danger me-1" onclick="deleteItem('projects', ${id})">Del</button>
+        ${clientEmail ? `<button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(clientEmail)}', '${escapeAttr(clientName)}')">Email Client</button>` : ''}
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
+  function renderTodoRow(row, tbody) {
+    const [id = '', task = '', due = '', done = 'Pending'] = row || [];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(task)}</td><td>${escapeHtml(due)}</td><td>${escapeHtml(done)}</td>
+      <td class="no-print">
+        <button class="btn btn-sm btn-info me-1" onclick="editItem('todos', this.closest('tr'))">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteItem('todos', ${id})">Del</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
+  function renderGenericRow(row, section, tbody) {
+    const tr = document.createElement('tr');
+    row.forEach(cell => tr.innerHTML += `<td>${escapeHtml(cell)}</td>`);
+    tr.innerHTML += `<td class="no-print">
+      <button class="btn btn-sm btn-info me-1" onclick="editItem('${section}', this.closest('tr'))">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteItem('${section}', ${row[0]})">Del</button>
+    </td>`;
+    tbody.appendChild(tr);
+  }
+
+  // ==== CLIENT SPECIFIC FUNCTIONS ====
+  async function editClient(id) {
+    try {
+      const clients = await fetchSheet('Clients');
+      const client = clients.find(c => c[0] == id);
+      if (client) {
+        const [clientId, name, company, contact, email, product, status] = client;
+        document.getElementById('clientId').value = clientId;
+        document.getElementById('clientName').value = name;
+        document.getElementById('clientCompany').value = company;
+        document.getElementById('clientContact').value = contact;
+        document.getElementById('clientEmail').value = email;
+        document.getElementById('clientProduct').value = product;
+        document.getElementById('clientStatus').value = status;
+        document.getElementById('clientForm').scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (error) {
+      alert('Error loading client data: ' + error);
+    }
+  }
+
+  function resetClientForm() {
+    const ids = ['clientId','clientName','clientCompany','clientContact','clientEmail','clientProduct'];
+    ids.forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+    const st = document.getElementById('clientStatus'); if (st) st.value = 'scout';
+  }
+
+  function editItem(section, tr) {
+    const formId = section === 'project-tracking' ? 'trackingForm' : `${section}Form`;
+    const inputs = document.querySelectorAll(`#${formId} input, #${formId} select`);
+    const cells = tr.cells;
+    for (let i = 0; i < cells.length - 1 && i < inputs.length; i++) {
+      const input = inputs[i];
+      if (!input) continue;
+      if (input.type === 'checkbox') input.checked = cells[i].textContent.trim() === 'Done';
+      else input.value = cells[i].textContent.trim();
+    }
+    const idField = section === 'project-tracking' ? 'trackingId' : `${section}Id`;
+    const idEl = document.getElementById(idField);
+    if (idEl) idEl.value = cells[0].textContent.trim();
+    // scroll to form
+    const formEl = document.getElementById(formId);
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function deleteItem(section, id) {
+    if (!confirm('Delete this record?')) return;
+    try {
+      const payload = { action: 'delete', sheet: getSheetName(section), id: id };
+      const result = await postToScript(payload);
+      if (result && result.success) loadData(section);
+      else alert('Error deleting record: ' + (result.error || JSON.stringify(result)));
+    } catch (error) {
+      alert('Error deleting record: ' + error);
+    }
+  }
+
+  // ==== SAVE FUNCTIONS ====
+  async function saveClient() {
+    const id = document.getElementById('clientId').value;
+    const data = [
+      document.getElementById('clientName').value,
+      document.getElementById('clientCompany').value,
+      document.getElementById('clientContact').value,
+      document.getElementById('clientEmail').value,
+      document.getElementById('clientProduct').value,
+      document.getElementById('clientStatus').value
+    ];
+
+    if (!data[0] || !data[3]) { alert('Please fill required fields (Name & Email)'); return; }
+
+    try {
+      const payload = { action: id ? 'update' : 'create', sheet: 'Clients', id: id ? parseInt(id) : null, data };
+      const result = await postToScript(payload);
+      if (result && result.success) {
+        alert('Client saved successfully!');
+        // send welcome email for new
+        if (!id) {
+          try {
+            await postToScript({ action: 'sendEmail', to: data[3], subject: `Welcome to Ska Digital Hub, ${data[0]}!`, body: `Hi ${data[0]},\n\nThanks for joining!\n\nSka Digital Hub` });
+          } catch (e) { console.warn('welcome email failed', e); }
+        }
+        loadData('clients');
+        resetClientForm();
+      } else {
+        alert('Error saving client: ' + (result.error || JSON.stringify(result)));
+      }
+    } catch (error) {
+      alert('Error saving client: ' + error);
+    }
+  }
+
+  async function saveProject() {
+    const id = document.getElementById('projectId').value;
+    const data = [
+      document.getElementById('projectName').value,
+      document.getElementById('projectClientId').value,
+      document.getElementById('projectDesc').value,
+      document.getElementById('projectStart').value,
+      document.getElementById('projectEnd').value,
+      document.getElementById('projectStatus').value,
+      document.getElementById('projectCharged').value
+    ];
+
+    try {
+      const payload = { action: id ? 'update' : 'create', sheet: 'Projects', id: id ? parseInt(id) : null, data };
+      const result = await postToScript(payload);
+      if (result && result.success) {
+        loadData('projects');
+        resetForm('projects');
+      } else alert('Error saving project: ' + (result.error || JSON.stringify(result)));
+    } catch (error) {
+      alert('Error saving project: ' + error);
+    }
+  }
+
+  async function savePayment() {
+    const id = document.getElementById('paymentId').value;
+    const data = [
+      document.getElementById('paymentProjectId').value,
+      document.getElementById('paymentAmount').value,
+      document.getElementById('paymentDate').value,
+      document.getElementById('paymentStatus').value
+    ];
+
+    try {
+      const payload = { action: id ? 'update' : 'create', sheet: 'Payments', id: id ? parseInt(id) : null, data };
+      const result = await postToScript(payload);
+      if (result && result.success) {
+        loadData('payments');
+        resetForm('payments');
+      } else alert('Error saving payment: ' + (result.error || JSON.stringify(result)));
+    } catch (error) { alert('Error saving payment: ' + error); }
+  }
+
+  async function saveTodo() {
+    const id = document.getElementById('todoId').value;
+    const data = [
+      document.getElementById('todoTask').value,
+      document.getElementById('todoDue').value,
+      document.getElementById('todoDone').checked ? 'Done' : 'Pending'
+    ];
+
+    try {
+      const payload = { action: id ? 'update' : 'create', sheet: 'Todos', id: id ? parseInt(id) : null, data };
+      const result = await postToScript(payload);
+      if (result && result.success) {
+        loadData('todos');
+        resetForm('todos');
+      } else alert('Error saving todo: ' + (result.error || JSON.stringify(result)));
+    } catch (error) { alert('Error saving todo: ' + error); }
+  }
+
+  async function saveTracking() {
+    const id = document.getElementById('trackingId').value;
+    const data = [
+      document.getElementById('trackingProjectId').value,
+      document.getElementById('trackingStage').value,
+      document.getElementById('trackingNotes').value
+    ];
+
+    try {
+      const payload = { action: id ? 'update' : 'create', sheet: 'ProjectTracking', id: id ? parseInt(id) : null, data };
+      const result = await postToScript(payload);
+      if (result && result.success) {
+        loadData('project-tracking');
+        resetForm('project-tracking');
+      } else alert('Error saving tracking: ' + (result.error || JSON.stringify(result)));
+    } catch (error) { alert('Error saving tracking: ' + error); }
+  }
+
+  function resetForm(section) {
+    const idField = section === 'project-tracking' ? 'trackingId' : `${section}Id`;
+    const idEl = document.getElementById(idField);
+    if (idEl) idEl.value = '';
+    const formId = section === 'project-tracking' ? 'trackingForm' : `${section}Form`;
+    document.querySelectorAll(`#${formId} input, #${formId} select`).forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else el.value = '';
+    });
+  }
+
+  // ==== EMAIL MODAL (per row) ====
+  function openEmailModal(to, name) {
+    document.getElementById('emailTo').value = to || '';
+    document.getElementById('emailRecipient').value = to || '';
+    document.getElementById('emailSubject').value = `Update for ${name || ''}`;
+    document.getElementById('emailBody').value = `Hi ${name || ''},\n\nHope this finds you well.\n\nBest,\nSka Digital Hub`;
+    new bootstrap.Modal(document.getElementById('emailModal')).show();
+  }
+
+  async function sendEmail() {
+    const to = document.getElementById('emailRecipient').value;
+    const subject = document.getElementById('emailSubject').value;
+    const body = document.getElementById('emailBody').value;
+    try {
+      const result = await postToScript({ action: 'sendEmail', to, subject, body });
+      if (result && result.success) {
+        alert('Email sent!');
+        bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+      } else {
+        alert('Failed to send email: ' + (result.error || JSON.stringify(result)));
+      }
+    } catch (error) {
+      alert('Failed to send email: ' + error);
+    }
+  }
+
+  // ==== MESSAGES SECTION ====
+  async function loadMessages() {
+    [clientsData, projectsData, paymentsData] = await Promise.all([
+      fetchSheet('Clients'), fetchSheet('Projects'), fetchSheet('Payments')
+    ]);
+
+    document.querySelectorAll('.message-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.message-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderMessageClients(tab.dataset.filter);
+      };
+    });
+
+    renderMessageClients('balance');
+  }
+
+  function calculateBalances() {
+    const balances = {};
+    projectsData.forEach(p => {
+      const clientId = p[2];
+      const charged = Number(p[7]) || 0;
+      const paid = paymentsData.filter(pay => pay[1] == p[0] && pay[4] === 'Paid').reduce((s,p) => s + Number(p[2] || 0), 0);
+      balances[clientId] = (balances[clientId] || 0) + (charged - paid);
+    });
+    return balances;
+  }
+
+  function renderMessageClients(filter) {
+    const tbody = document.querySelector('#messageClientsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const balances = calculateBalances();
+
+    let filtered = [];
+
+    if (filter === 'balance') {
+      filtered = clientsData.filter(c => (balances[c[0]] || 0) > 0).map(c => ({ ...c, balance: balances[c[0]] }));
+    } else if (filter === 'completed') {
+      filtered = projectsData.filter(p => ['Closed','Completed'].includes(p[6])).map(p => {
+        const client = clientsData.find(c => c[0] == p[2]);
+        return client ? { ...client, projectName: p[1], balance: 0 } : null;
+      }).filter(Boolean);
+    } else if (filter === 'new') {
+      const last7days = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      filtered = clientsData.filter(c => {
+        const ts = c[c.length - 1];
+        return ts && new Date(ts) > last7days;
+      });
+    }
+
+    filtered.forEach(client => {
+      const [id, name, company, contact, email] = client;
+      const balance = client.balance || 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(name)}</td><td>${escapeHtml(company)}</td><td>${escapeHtml(contact || '-')}</td><td>${escapeHtml(email || '-')}</td>
+        <td>${balance > 0 ? '$' + balance.toFixed(2) : '-'}</td>
+        <td>${filter === 'completed' ? 'Project Done' : filter === 'new' ? 'New' : 'Debt'}</td>
+        <td class="no-print"><button class="btn btn-sm btn-primary" onclick="selectClientForMessage(${id})">Send</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function selectClientForMessage(id) {
+    selectedClient = clientsData.find(c => c[0] == id);
+    if (!selectedClient) return alert('Client not found');
+
+    document.getElementById('msgClientName').textContent = selectedClient[1];
+    document.getElementById('msgEmail').value = selectedClient[4] || '';
+    document.getElementById('msgWhatsAppPhone').value = selectedClient[3] || '';
+    document.getElementById('msgSMSPhone').value = selectedClient[3] || '';
+
+    const name = selectedClient[1];
+    document.getElementById('msgEmailSubject').value = `Payment Reminder - ${name}`;
+    document.getElementById('msgEmailBody').value = `Hi ${name},\n\nYour outstanding balance is due. Please settle soon.\n\nThank you!\nSka Digital Hub`;
+    document.getElementById('msgWhatsAppText').value = `Hi ${name}, your balance is due. Please pay soon.`;
+    document.getElementById('msgSMSText').value = `Hi ${name}, balance due. Pay now.`;
+
+    new bootstrap.Modal(document.getElementById('messageModal')).show();
+  }
+
+  async function sendActiveMessage() {
+    const active = document.querySelector('#msgTypeTabs .nav-link.active')?.getAttribute('href');
+    if (active === '#tabEmail') await sendEmailMessage();
+    else if (active === '#tabWhatsApp') sendWhatsAppMessage();
+    else if (active === '#tabSMS') sendSMSMessage();
+  }
+
+  async function sendEmailMessage() {
+    const to = document.getElementById('msgEmail').value;
+    const subject = document.getElementById('msgEmailSubject').value;
+    const body = document.getElementById('msgEmailBody').value;
+    if (!to || !subject || !body) return alert('Fill all fields');
+
+    try {
+      const result = await postToScript({ action: 'sendEmail', to, subject, body });
+      if (result && result.success) {
+        alert('Email sent!');
+        bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+      } else {
+        alert('Failed to send email: ' + (result.error || JSON.stringify(result)));
+      }
+    } catch (error) {
+      alert('Failed to send email: ' + error);
+    }
+  }
+
+  function sendWhatsAppMessage() {
+    const phone = document.getElementById('msgWhatsAppPhone').value.replace(/[^\d]/g, '');
+    const msg = encodeURIComponent(document.getElementById('msgWhatsAppText').value);
+    if (!phone || !msg) return alert('Fill message');
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+  }
+
+  function sendSMSMessage() {
+    const phone = document.getElementById('msgSMSPhone').value.replace(/[^\d]/g, '');
+    const msg = encodeURIComponent(document.getElementById('msgSMSText').value);
+    if (!phone || !msg) return alert('Fill message');
+    window.open(`sms:${phone}?body=${msg}`, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+  }
+
+  // ==== DASHBOARD ====
+  async function loadDashboard() {
+    const [clients, projects, payments, todos, tracks] = await Promise.all([
+      fetchSheet('Clients'), fetchSheet('Projects'), fetchSheet('Payments'),
+      fetchSheet('Todos'), fetchSheet('ProjectTracking')
+    ]);
+    clientsData = clients; projectsData = projects; paymentsData = payments;
+
+    const content = document.getElementById('dashboardContent');
+    content.innerHTML = '';
+    addCard(content, 'bi-people', 'Total Clients', clients.length);
+    addCard(content, 'bi-folder', 'Active Projects', projects.filter(p => !['Closed','Completed'].includes(p[6])).length);
+    addCard(content, 'bi-currency-dollar', 'Total Revenue', `$${projects.reduce((s,p)=>s+(Number(p[7])||0),0).toFixed(2)}`);
+    addCard(content, 'bi-check-circle', 'Completed Tasks', todos.filter(t => t[3] === 'Done').length);
+
+    const activity = document.getElementById('activityList');
+    activity.innerHTML = '';
+    const recent = [...clients.slice(-3), ...projects.slice(-3), ...payments.slice(-3)].sort((a,b)=>b[0]-a[0]);
+    recent.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item activity-item';
+      li.textContent = `New ${r[1]} added`;
+      activity.appendChild(li);
+    });
+  }
+
+  function addCard(parent, icon, title, value) {
+    const div = document.createElement('div');
+    div.className = 'col-md-3';
+    div.innerHTML = `<div class="card dashboard-card shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi ${icon} fs-1 text-primary"></i>
+        <h5 class="mt-2">${title}</h5>
+        <h3>${value}</h3>
+      </div>
+    </div>`;
+    parent.appendChild(div);
+  }
+
+  // ==== EXPORT CSV / PDF ====
+  function exportCSV(section) {
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const table = document.querySelector(`#${tableId}`);
+    if (!table) return;
+    let csv = [];
+    table.querySelectorAll('tr').forEach(tr => {
+      const row = [];
+      tr.querySelectorAll('th, td').forEach(cell => {
+        if (!cell.classList.contains('no-print')) row.push(`"${cell.textContent.replace(/"/g, '""')}"`);
+      });
+      if (row.length > 0) csv.push(row.join(','));
+    });
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${section}.csv`; a.click();
+  }
+
+  async function exportPDF(section) {
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const table = document.querySelector(`#${tableId}`);
+    if (!table) return;
+
+    const clone = table.cloneNode(true);
+    clone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+    const container = document.createElement('div');
+    container.style.padding = '20px';
+    container.style.background = '#fff';
+    container.style.fontSize = '12px';
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    const canvas = await html2canvas(container, {
+      scale: 3,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    let position = 0;
+
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`${section}.pdf`);
+    document.body.removeChild(container);
+  }
+
+  // ==== UTILITIES ====
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[s]);
+  }
+  function escapeAttr(str) {
+    return String(escapeHtml(str)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ==== INITIAL LOAD ====
+  window.onload = () => showSection('dashboard');
+</script>
+
+</body>
+</html>
