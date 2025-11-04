@@ -84,7 +84,18 @@ body{background:#f5f5f5;}
 <h3>Project Tracking</h3>
 <input id="trackId" type="hidden">
 <input class="form-control mb-2" id="trackProjectId" placeholder="Project ID">
-<input class="form-control mb-2" id="trackStage" placeholder="Stage">
+  
+<label class="form-control mb-2">Stage
+  <select class="form-control mb-2" id="trackStage" required>
+    <option value="">-- select --</option>
+    <option value="1">1 - Planning</option>
+    <option value="2">2 - Design</option>
+    <option value="3">3 - Development</option>
+    <option value="4">4 - Testing</option>
+    <option value="5">5 - Deployment</option>
+  </select>
+</label>
+  
 <input class="form-control mb-2" id="trackNotes" placeholder="Notes">
 <button class="btn btn-primary mb-3" onclick="saveTrack()">Save</button>
 <table class="table table-striped" id="trackTable"><tbody></tbody></table>
@@ -99,6 +110,7 @@ body{background:#f5f5f5;}
 <button class="btn btn-success" onclick="sendMail()">Send</button>
 </div>
 </div>
+  <br>
 
 <div style="background: blue; color: white">
   <a class="btn btn-primary" href="index.html">Back</a>
