@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ska Digital Hub CRM</title>
+  <title>Ska Digital Hub CRM - Data View</title>
   <!-- Bootstrap 5 + Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -37,7 +37,7 @@
 </head>
 <body>
 <header class="bg-dark text-white text-center py-3 mb-4">
-  <h1 class="mb-0">Ska Digital Hub CRM</h1>
+  <h1 class="mb-0">Ska Digital Hub CRM - Data View</h1>
 </header>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
@@ -77,33 +77,6 @@
 
   <!-- ==================== CLIENTS ==================== -->
   <section id="clients" class="mb-5" style="display:none;">
-    <div class="card shadow-sm">
-      <div class="card-header">Client Details</div>
-      <div class="card-body" id="clientForm">
-        <input type="hidden" id="clientId">
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label">Name <input class="form-control" id="clientName" required></label></div>
-          <div class="col-md-6"><label class="form-label">Company <input class="form-control" id="clientCompany" required></label></div>
-          <div class="col-md-6"><label class="form-label">Contact <input class="form-control" id="clientContact" required></label></div>
-          <div class="col-md-6"><label class="form-label">Email <input class="form-control" type="email" id="clientEmail" required></label></div>
-          <div class="col-md-6"><label class="form-label">Product/Service <input class="form-control" id="clientProduct" required></label></div>
-          <div class="col-md-6"><label class="form-label">Status
-            <select class="form-select" id="clientStatus" required>
-              <option value="scout">Scout</option>
-              <option value="contacted">Contacted</option>
-              <option value="hold">Hold</option>
-              <option value="interested">Interested</option>
-              <option value="not interested">Not Interested</option>
-              <option value="negotiation">Negotiation</option>
-              <option value="closed">Closed</option>
-            </select>
-          </label></div>
-        </div>
-        <button type="button" class="btn btn-primary mt-3" onclick="saveClient()">Save Client</button>
-        <button type="button" class="btn btn-secondary mt-3" onclick="resetClientForm()">Clear Form</button>
-      </div>
-    </div>
-
     <!-- FILTER BAR -->
     <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
       <input type="text" class="form-control filter-input" id="filterClients" placeholder="Search clients..." onkeyup="filterTable('clients')">
@@ -135,26 +108,8 @@
     </div>
   </section>
 
-  <!-- Other sections remain the same -->
   <!-- ==================== PROJECTS ==================== -->
   <section id="projects" class="mb-5" style="display:none;">
-    <div class="card shadow-sm">
-      <div class="card-header">Project Details</div>
-      <div class="card-body" id="projectForm">
-        <input type="hidden" id="projectId">
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label">Name <input class="form-control" id="projectName" required></label></div>
-          <div class="col-md-6"><label class="form-label">Client ID <input class="form-control" id="projectClientId" required></label></div>
-          <div class="col-12"><label class="form-label">Description <input class="form-control" id="projectDesc" required></label></div>
-          <div class="col-md-4"><label class="form-label">Start Date <input class="form-control" type="date" id="projectStart" required></label></div>
-          <div class="col-md-4"><label class="form-label">End Date <input class="form-control" type="date" id="projectEnd"></label></div>
-          <div class="col-md-4"><label class="form-label">Status <input class="form-control" id="projectStatus" required></label></div>
-          <div class="col-md-4"><label class="form-label">Total Charged <input class="form-control" type="number" step="0.01" id="projectCharged" required></label></div>
-        </div>
-        <button type="button" class="btn btn-primary mt-3" onclick="saveProject()">Save Project</button>
-      </div>
-    </div>
-
     <!-- FILTER BAR -->
     <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
       <input type="text" class="form-control filter-input" id="filterProjects" placeholder="Search projects..." onkeyup="filterTable('projects')">
@@ -189,24 +144,6 @@
 
   <!-- ==================== PAYMENTS ==================== -->
   <section id="payments" class="mb-5" style="display:none;">
-    <div class="card shadow-sm">
-      <div class="card-header">Add Payment</div>
-      <div class="card-body" id="paymentForm">
-        <input type="hidden" id="paymentId">
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Project ID <input class="form-control" id="paymentProjectId" required></label></div>
-          <div class="col-md-4"><label class="form-label">Amount GH₵<input class="form-control" type="number" step="0.01" id="paymentAmount" required></label></div>
-          <div class="col-md-4"><label class="form-label">Date <input class="form-control" type="date" id="paymentDate" required></label></div>
-          <div class="col-md-4"><label class="form-label">Status
-            <select class="form-select" id="paymentStatus" required>
-              <option>Pending</option><option>Paid</option>
-            </select>
-          </label></div>
-        </div>
-        <button type="button" class="btn btn-primary mt-3" onclick="savePayment()">Save Payment</button>
-      </div>
-    </div>
-
     <!-- FILTER BAR -->
     <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
       <input type="text" class="form-control filter-input" id="filterPayments" placeholder="Search payments..." onkeyup="filterTable('payments')">
@@ -237,19 +174,6 @@
 
   <!-- ==================== TODO LIST ==================== -->
   <section id="todos" class="mb-5" style="display:none;">
-    <div class="card shadow-sm">
-      <div class="card-header">Todo</div>
-      <div class="card-body" id="todoForm">
-        <input type="hidden" id="todoId">
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label">Task <input class="form-control" id="todoTask" required></label></div>
-          <div class="col-md-4"><label class="form-label">Due Date <input class="form-control" type="date" id="todoDue"></label></div>
-          <div class="col-md-2 d-flex align-items-center"><label class="form-label mb-0"><input type="checkbox" id="todoDone"> Done</label></div>
-        </div>
-        <button type="button" class="btn btn-primary mt-3" onclick="saveTodo()">Save Todo</button>
-      </div>
-    </div>
-
     <!-- FILTER BAR -->
     <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
       <input type="text" class="form-control filter-input" id="filterTodos" placeholder="Search tasks..." onkeyup="filterTable('todos')">
@@ -280,28 +204,6 @@
 
   <!-- ==================== PROJECT TRACKING ==================== -->
   <section id="project-tracking" class="mb-5" style="display:none;">
-    <div class="card shadow-sm">
-      <div class="card-header">Track Milestone / Stage</div>
-      <div class="card-body" id="trackingForm">
-        <input type="hidden" id="trackingId">
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Project ID <input class="form-control" id="trackingProjectId" required></label></div>
-          <div class="col-md-4"><label class="form-label">Stage
-            <select class="form-select" id="trackingStage" required>
-              <option value="">-- select --</option>
-              <option value="1">1 - Planning</option>
-              <option value="2">2 - Design</option>
-              <option value="3">3 - Development</option>
-              <option value="4">4 - Testing</option>
-              <option value="5">5 - Deployment</option>
-            </select>
-          </label></div>
-          <div class="col-md-4"><label class="form-label">Notes <input class="form-control" id="trackingNotes"></label></div>
-        </div>
-        <button type="button" class="btn btn-primary mt-3" onclick="saveTracking()">Save Tracking</button>
-      </div>
-    </div>
-
     <!-- FILTER BAR -->
     <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
       <input type="text" class="form-control filter-input" id="filterTracking" placeholder="Search project ID or notes..." onkeyup="filterTable('project-tracking')">
@@ -428,7 +330,7 @@
   </div>
 </div>
 
-  <div style="background: blue; color: white">
+<div style="background: blue; color: white; padding: 10px; text-align: left;">
   <a class="btn btn-primary" href="input.html">Next</a>
 </div>
   
@@ -559,8 +461,6 @@
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${id}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(company)}</td><td>${escapeHtml(contact)}</td><td>${escapeHtml(email)}</td><td>${escapeHtml(product)}</td><td>${escapeHtml(status)}</td>
       <td class="no-print">
-        <button class="btn btn-sm btn-info me-1" onclick="editClient(${id})">Edit</button>
-        <button class="btn btn-sm btn-danger me-1" onclick="deleteItem('clients', ${id})">Del</button>
         <button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(email)}', '${escapeAttr(name)}')">Email</button>
       </td>`;
     tbody.appendChild(tr);
@@ -586,8 +486,6 @@
       <td><span class="${payClass} px-2 rounded">${payPct.toFixed(1)}%</span></td>
       <td>${escapeHtml(stageName)}</td><td><span class="${progClass} px-2 rounded">${progPct}%</span></td>
       <td class="no-print">
-        <button class="btn btn-sm btn-info me-1" onclick="editItem('projects', this.closest('tr'))">Edit</button>
-        <button class="btn btn-sm btn-danger me-1" onclick="deleteItem('projects', ${id})">Del</button>
         ${clientEmail ? `<button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(clientEmail)}', '${escapeAttr(clientName)}')">Email Client</button>` : ''}
       </td>`;
     tbody.appendChild(tr);
@@ -597,203 +495,15 @@
     const [id = '', task = '', due = '', done = 'Pending'] = row || [];
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${id}</td><td>${escapeHtml(task)}</td><td>${escapeHtml(due)}</td><td>${escapeHtml(done)}</td>
-      <td class="no-print">
-        <button class="btn btn-sm btn-info me-1" onclick="editItem('todos', this.closest('tr'))">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteItem('todos', ${id})">Del</button>
-      </td>`;
+      <td class="no-print"></td>`;
     tbody.appendChild(tr);
   }
 
   function renderGenericRow(row, section, tbody) {
     const tr = document.createElement('tr');
     row.forEach(cell => tr.innerHTML += `<td>${escapeHtml(cell)}</td>`);
-    tr.innerHTML += `<td class="no-print">
-      <button class="btn btn-sm btn-info me-1" onclick="editItem('${section}', this.closest('tr'))">Edit</button>
-      <button class="btn btn-sm btn-danger" onclick="deleteItem('${section}', ${row[0]})">Del</button>
-    </td>`;
+    tr.innerHTML += `<td class="no-print"></td>`;
     tbody.appendChild(tr);
-  }
-
-  // ==== CLIENT SPECIFIC FUNCTIONS ====
-  async function editClient(id) {
-    try {
-      const clients = await fetchSheet('Clients');
-      const client = clients.find(c => c[0] == id);
-      if (client) {
-        const [clientId, name, company, contact, email, product, status] = client;
-        document.getElementById('clientId').value = clientId;
-        document.getElementById('clientName').value = name;
-        document.getElementById('clientCompany').value = company;
-        document.getElementById('clientContact').value = contact;
-        document.getElementById('clientEmail').value = email;
-        document.getElementById('clientProduct').value = product;
-        document.getElementById('clientStatus').value = status;
-        document.getElementById('clientForm').scrollIntoView({ behavior: 'smooth' });
-      }
-    } catch (error) {
-      alert('Error loading client data: ' + error);
-    }
-  }
-
-  function resetClientForm() {
-    const ids = ['clientId','clientName','clientCompany','clientContact','clientEmail','clientProduct'];
-    ids.forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
-    const st = document.getElementById('clientStatus'); if (st) st.value = 'scout';
-  }
-
-  function editItem(section, tr) {
-    const formId = section === 'project-tracking' ? 'trackingForm' : `${section}Form`;
-    const inputs = document.querySelectorAll(`#${formId} input, #${formId} select`);
-    const cells = tr.cells;
-    for (let i = 0; i < cells.length - 1 && i < inputs.length; i++) {
-      const input = inputs[i];
-      if (!input) continue;
-      if (input.type === 'checkbox') input.checked = cells[i].textContent.trim() === 'Done';
-      else input.value = cells[i].textContent.trim();
-    }
-    const idField = section === 'project-tracking' ? 'trackingId' : `${section}Id`;
-    const idEl = document.getElementById(idField);
-    if (idEl) idEl.value = cells[0].textContent.trim();
-    // scroll to form
-    const formEl = document.getElementById(formId);
-    if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  async function deleteItem(section, id) {
-    if (!confirm('Delete this record?')) return;
-    try {
-      const payload = { action: 'delete', sheet: getSheetName(section), id: id };
-      const result = await postToScript(payload);
-      if (result && result.success) loadData(section);
-      else alert('Error deleting record: ' + (result.error || JSON.stringify(result)));
-    } catch (error) {
-      alert('Error deleting record: ' + error);
-    }
-  }
-
-  // ==== SAVE FUNCTIONS ====
-  async function saveClient() {
-    const id = document.getElementById('clientId').value;
-    const data = [
-      document.getElementById('clientName').value,
-      document.getElementById('clientCompany').value,
-      document.getElementById('clientContact').value,
-      document.getElementById('clientEmail').value,
-      document.getElementById('clientProduct').value,
-      document.getElementById('clientStatus').value
-    ];
-
-    if (!data[0] || !data[3]) { alert('Please fill required fields (Name & Email)'); return; }
-
-    try {
-      const payload = { action: id ? 'update' : 'create', sheet: 'Clients', id: id ? parseInt(id) : null, data };
-      const result = await postToScript(payload);
-      if (result && result.success) {
-        alert('Client saved successfully!');
-        // send welcome email for new
-        if (!id) {
-          try {
-            await postToScript({ action: 'sendEmail', to: data[3], subject: `Welcome to Ska Digital Hub, ${data[0]}!`, body: `Hi ${data[0]},\n\nThanks for joining!\n\nSka Digital Hub` });
-          } catch (e) { console.warn('welcome email failed', e); }
-        }
-        loadData('clients');
-        resetClientForm();
-      } else {
-        alert('Error saving client: ' + (result.error || JSON.stringify(result)));
-      }
-    } catch (error) {
-      alert('Error saving client: ' + error);
-    }
-  }
-
-  async function saveProject() {
-    const id = document.getElementById('projectId').value;
-    const data = [
-      document.getElementById('projectName').value,
-      document.getElementById('projectClientId').value,
-      document.getElementById('projectDesc').value,
-      document.getElementById('projectStart').value,
-      document.getElementById('projectEnd').value,
-      document.getElementById('projectStatus').value,
-      document.getElementById('projectCharged').value
-    ];
-
-    try {
-      const payload = { action: id ? 'update' : 'create', sheet: 'Projects', id: id ? parseInt(id) : null, data };
-      const result = await postToScript(payload);
-      if (result && result.success) {
-        loadData('projects');
-        resetForm('projects');
-      } else alert('Error saving project: ' + (result.error || JSON.stringify(result)));
-    } catch (error) {
-      alert('Error saving project: ' + error);
-    }
-  }
-
-  async function savePayment() {
-    const id = document.getElementById('paymentId').value;
-    const data = [
-      document.getElementById('paymentProjectId').value,
-      document.getElementById('paymentAmount').value,
-      document.getElementById('paymentDate').value,
-      document.getElementById('paymentStatus').value
-    ];
-
-    try {
-      const payload = { action: id ? 'update' : 'create', sheet: 'Payments', id: id ? parseInt(id) : null, data };
-      const result = await postToScript(payload);
-      if (result && result.success) {
-        loadData('payments');
-        resetForm('payments');
-      } else alert('Error saving payment: ' + (result.error || JSON.stringify(result)));
-    } catch (error) { alert('Error saving payment: ' + error); }
-  }
-
-  async function saveTodo() {
-    const id = document.getElementById('todoId').value;
-    const data = [
-      document.getElementById('todoTask').value,
-      document.getElementById('todoDue').value,
-      document.getElementById('todoDone').checked ? 'Done' : 'Pending'
-    ];
-
-    try {
-      const payload = { action: id ? 'update' : 'create', sheet: 'Todos', id: id ? parseInt(id) : null, data };
-      const result = await postToScript(payload);
-      if (result && result.success) {
-        loadData('todos');
-        resetForm('todos');
-      } else alert('Error saving todo: ' + (result.error || JSON.stringify(result)));
-    } catch (error) { alert('Error saving todo: ' + error); }
-  }
-
-  async function saveTracking() {
-    const id = document.getElementById('trackingId').value;
-    const data = [
-      document.getElementById('trackingProjectId').value,
-      document.getElementById('trackingStage').value,
-      document.getElementById('trackingNotes').value
-    ];
-
-    try {
-      const payload = { action: id ? 'update' : 'create', sheet: 'ProjectTracking', id: id ? parseInt(id) : null, data };
-      const result = await postToScript(payload);
-      if (result && result.success) {
-        loadData('project-tracking');
-        resetForm('project-tracking');
-      } else alert('Error saving tracking: ' + (result.error || JSON.stringify(result)));
-    } catch (error) { alert('Error saving tracking: ' + error); }
-  }
-
-  function resetForm(section) {
-    const idField = section === 'project-tracking' ? 'trackingId' : `${section}Id`;
-    const idEl = document.getElementById(idField);
-    if (idEl) idEl.value = '';
-    const formId = section === 'project-tracking' ? 'trackingForm' : `${section}Form`;
-    document.querySelectorAll(`#${formId} input, #${formId} select`).forEach(el => {
-      if (el.type === 'checkbox') el.checked = false;
-      else el.value = '';
-    });
   }
 
   // ==== EMAIL MODAL (per row) ====
@@ -899,6 +609,22 @@
     document.getElementById('msgEmailBody').value = `Hi ${name},\n\nYour outstanding balance is due. Please settle soon.\n\nThank you!\nSka Digital Hub`;
     document.getElementById('msgWhatsAppText').value = `Hi ${name}, your balance is due. Please pay soon.`;
     document.getElementById('msgSMSText').value = `Hi ${name}, balance due. Pay now.`;
+
+    new bootstrap.Modal(document.getElementById('messageModal')).show();
+  }
+
+  // FIXED: Added missing openMessageModal function
+  function openMessageModal() {
+    // This opens a generic message modal without a specific client
+    document.getElementById('msgClientName').textContent = 'All Clients';
+    document.getElementById('msgEmail').value = '';
+    document.getElementById('msgWhatsAppPhone').value = '';
+    document.getElementById('msgSMSPhone').value = '';
+
+    document.getElementById('msgEmailSubject').value = 'Important Update from Ska Digital Hub';
+    document.getElementById('msgEmailBody').value = 'Dear client,\n\nWe have an important update for you.\n\nBest regards,\nSka Digital Hub Team';
+    document.getElementById('msgWhatsAppText').value = 'Hi, we have an important update for you.';
+    document.getElementById('msgSMSText').value = 'Important update from Ska Digital Hub';
 
     new bootstrap.Modal(document.getElementById('messageModal')).show();
   }
