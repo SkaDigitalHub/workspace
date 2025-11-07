@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Ska Digital Hub CRM</title>
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <style>
-body{background:#f5f5f5;}
-.container{max-width:1200px;}
-.nav-link.active{background:black !important;color:white!important}
+body { background: #f5f5f5; }
+.container { max-width: 1200px; }
+.nav-link.active { background: black !important; color: white !important; }
+.screen { display: none; }
+.screen:first-child { display: block; }
 </style>
 </head>
 
@@ -28,159 +30,371 @@ body{background:#f5f5f5;}
 <div id="clients" class="screen">
 <h3>Clients</h3>
 <input id="clientId" type="hidden">
-<input class="form-control mb-2" id="clientName" placeholder="Name">
-<input class="form-control mb-2" id="clientCompany" placeholder="Company">
-<input class="form-control mb-2" id="clientContact" placeholder="Contact">
-<input class="form-control mb-2" id="clientEmail" placeholder="Email">
-<input class="form-control mb-2" id="clientProduct" placeholder="Product">
-<select class="form-control mb-2" id="clientStatus">
-<option>scout</option><option>contacted</option><option>interested</option>
-<option>negotiation</option><option>hold</option><option>closed</option>
+<input class="form-control mb-2" id="clientName" placeholder="Name" required>
+<input class="form-control mb-2" id="clientCompany" placeholder="Company" required>
+<input class="form-control mb-2" id="clientContact" placeholder="Contact" required>
+<input class="form-control mb-2" id="clientEmail" placeholder="Email" type="email" required>
+<input class="form-control mb-2" id="clientProduct" placeholder="Product" required>
+<select class="form-control mb-2" id="clientStatus" required>
+<option value="">Select Status</option>
+<option value="scout">Scout</option>
+<option value="contacted">Contacted</option>
+<option value="interested">Interested</option>
+<option value="negotiation">Negotiation</option>
+<option value="hold">Hold</option>
+<option value="closed">Closed</option>
 </select>
 <button class="btn btn-primary mb-3" onclick="saveClient()">Save</button>
 <table class="table table-striped" id="clientTable"><tbody></tbody></table>
 </div>
 
 <!-- ✅ PROJECTS -->
-<div id="projects" class="screen" style="display:none">
+<div id="projects" class="screen">
 <h3>Projects</h3>
 <input id="projectId" type="hidden">
-<input class="form-control mb-2" id="projectName" placeholder="Project Name">
-<input class="form-control mb-2" id="projectClientId" placeholder="Client ID">
-<input class="form-control mb-2" id="projectDesc" placeholder="Description">
-<input type="date" class="form-control mb-2" id="projectStart">
-<input type="date" class="form-control mb-2" id="projectEnd">
-<input class="form-control mb-2" id="projectStatus" placeholder="Status">
-<input class="form-control mb-2" id="projectCharged" placeholder="Total Charged">
+<input class="form-control mb-2" id="projectName" placeholder="Project Name" required>
+<input class="form-control mb-2" id="projectClientId" placeholder="Client ID" type="number" required>
+<input class="form-control mb-2" id="projectDesc" placeholder="Description" required>
+<input type="date" class="form-control mb-2" id="projectStart" required>
+<input type="date" class="form-control mb-2" id="projectEnd" required>
+<select class="form-control mb-2" id="projectStatus" required>
+<option value="">Select Status</option>
+<option value="planned">Planned</option>
+<option value="in-progress">In Progress</option>
+<option value="completed">Completed</option>
+<option value="on-hold">On Hold</option>
+<option value="cancelled">Cancelled</option>
+</select>
+<input class="form-control mb-2" id="projectCharged" placeholder="Total Charged" type="number" step="0.01" required>
 <button class="btn btn-primary mb-3" onclick="saveProject()">Save</button>
 <table class="table table-striped" id="projectTable"><tbody></tbody></table>
 </div>
 
 <!-- ✅ PAYMENTS -->
-<div id="payments" class="screen" style="display:none">
+<div id="payments" class="screen">
 <h3>Payments</h3>
 <input id="paymentId" type="hidden">
-<input class="form-control mb-2" id="paymentProjectId" placeholder="Project ID">
-<input class="form-control mb-2" id="paymentAmount" placeholder="Amount">
-<input type="date" class="form-control mb-2" id="paymentDate">
-<select class="form-control mb-2" id="paymentStatus"><option>Pending</option><option>Paid</option></select>
+<input class="form-control mb-2" id="paymentProjectId" placeholder="Project ID" type="number" required>
+<input class="form-control mb-2" id="paymentAmount" placeholder="Amount" type="number" step="0.01" required>
+<input type="date" class="form-control mb-2" id="paymentDate" required>
+<select class="form-control mb-2" id="paymentStatus" required>
+<option value="">Select Status</option>
+<option value="Pending">Pending</option>
+<option value="Paid">Paid</option>
+</select>
 <button class="btn btn-primary mb-3" onclick="savePayment()">Save</button>
 <table class="table table-striped" id="paymentTable"><tbody></tbody></table>
 </div>
 
 <!-- ✅ TODOS -->
-<div id="todos" class="screen" style="display:none">
+<div id="todos" class="screen">
 <h3>Todo</h3>
 <input id="todoId" type="hidden">
-<input class="form-control mb-2" id="todoTask" placeholder="Task">
-<input type="date" class="form-control mb-2" id="todoDue">
-<label><input type="checkbox" id="todoDone"> Done</label>
+<input class="form-control mb-2" id="todoTask" placeholder="Task" required>
+<input type="date" class="form-control mb-2" id="todoDue" required>
+<div class="form-check mb-2">
+<input class="form-check-input" type="checkbox" id="todoDone">
+<label class="form-check-label" for="todoDone">Done</label>
+</div>
 <button class="btn btn-primary mb-3" onclick="saveTodo()">Save</button>
 <table class="table table-striped" id="todoTable"><tbody></tbody></table>
 </div>
 
 <!-- ✅ TRACKING -->
-<div id="tracking" class="screen" style="display:none">
+<div id="tracking" class="screen">
 <h3>Project Tracking</h3>
 <input id="trackId" type="hidden">
-<input class="form-control mb-2" id="trackProjectId" placeholder="Project ID">
-  
-<label class="form-control mb-2">Stage
-  <select class="form-control mb-2" id="trackStage" required>
-    <option value="">-- select --</option>
-    <option value="1">1 - Planning</option>
-    <option value="2">2 - Design</option>
-    <option value="3">3 - Development</option>
-    <option value="4">4 - Testing</option>
-    <option value="5">5 - Deployment</option>
-  </select>
-</label>
-  
-<input class="form-control mb-2" id="trackNotes" placeholder="Notes">
+<input class="form-control mb-2" id="trackProjectId" placeholder="Project ID" type="number" required>
+<select class="form-control mb-2" id="trackStage" required>
+<option value="">-- select --</option>
+<option value="1">1 - Planning</option>
+<option value="2">2 - Design</option>
+<option value="3">3 - Development</option>
+<option value="4">4 - Testing</option>
+<option value="5">5 - Deployment</option>
+</select>
+<input class="form-control mb-2" id="trackNotes" placeholder="Notes" required>
 <button class="btn btn-primary mb-3" onclick="saveTrack()">Save</button>
 <table class="table table-striped" id="trackTable"><tbody></tbody></table>
 </div>
 
 <!-- ✅ EMAIL -->
-<div id="email" class="screen" style="display:none">
+<div id="email" class="screen">
 <h3>Send Email</h3>
-<input class="form-control mb-2" id="emailTo" placeholder="To">
-<input class="form-control mb-2" id="emailSubject" placeholder="Subject">
-<textarea class="form-control mb-2" id="emailBody" placeholder="Message"></textarea>
+<input class="form-control mb-2" id="emailTo" placeholder="To" type="email" required>
+<input class="form-control mb-2" id="emailSubject" placeholder="Subject" required>
+<textarea class="form-control mb-2" id="emailBody" placeholder="Message" rows="5" required></textarea>
 <button class="btn btn-success" onclick="sendMail()">Send</button>
 </div>
 </div>
-  <br>
+<br>
 
-<div style="background: blue; color: white">
-  <a class="btn btn-primary" href="index.html">Back</a>
+<div style="background: blue; color: white; padding: 10px;">
+<a class="btn btn-primary" href="index.html">Back</a>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Confirmation</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body" id="confirmationMessage">
+Are you sure you want to proceed?
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+<button type="button" class="btn btn-primary" id="confirmAction">Confirm</button>
+</div>
+</div>
+</div>
 </div>
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbxOJQSRAXcVsHWoUQHlQYVLSt202_UNFtJ3KUkgeE165eBzw_LDVN3WumibZqI5e7_OSw/exec";
 
+let currentModal = null;
+
 /* Switch screen */
-function show(id){
-document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
-document.getElementById(id).style.display="block";
+function show(id) {
+document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+document.getElementById(id).style.display = "block";
+document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+document.querySelector(`a[onclick="show('${id}')"]`).classList.add("active");
 load(id);
 }
 
 /* Read */
-async function get(sheet){
-return await (await fetch(`${API}?action=read&sheet=${sheet}`)).json();
+async function get(sheet) {
+try {
+const response = await fetch(`${API}?action=read&sheet=${sheet}`);
+if (!response.ok) throw new Error('Network response was not ok');
+return await response.json();
+} catch (error) {
+console.error('Error fetching data:', error);
+showModal('Error', 'Failed to load data. Please try again.');
+return [];
+}
 }
 
 /* Render tables */
-async function load(t){
-const map={clients:"Clients",projects:"Projects",payments:"Payments",todos:"Todos",tracking:"ProjectTracking"};
-let sheet=map[t]; if(!sheet) return;
-let data=await get(sheet);
-let tbody=document.querySelector(`#${t}Table tbody`);
-tbody.innerHTML="";
-data.forEach(r=>{
-tbody.innerHTML+=`<tr>${r.map(v=>`<td>${v}</td>`).join("")}</tr>`;
+async function load(t) {
+const map = {
+clients: "Clients",
+projects: "Projects", 
+payments: "Payments",
+todos: "Todos",
+tracking: "ProjectTracking"
+};
+let sheet = map[t]; 
+if (!sheet) return;
+let data = await get(sheet);
+let tbody = document.querySelector(`#${t}Table tbody`);
+tbody.innerHTML = "";
+data.forEach(r => {
+tbody.innerHTML += `<tr>${r.map(v => `<td>${v || ''}</td>`).join("")}</tr>`;
 });
+}
+
+/* Confirmation Modal */
+function showModal(title, message, confirmCallback) {
+document.querySelector('#confirmationModal .modal-title').textContent = title;
+document.getElementById('confirmationMessage').textContent = message;
+const confirmBtn = document.getElementById('confirmAction');
+    
+// Remove previous event listeners
+confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+const newConfirmBtn = document.getElementById('confirmAction');
+    
+newConfirmBtn.onclick = function() {
+if (confirmCallback) {
+confirmCallback();
+}
+// Properly hide the modal
+const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+if (modal) {
+modal.hide();
+}
+};
+
+currentModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+currentModal.show();
+}
+
+/* Validation functions */
+function validateForm(fields) {
+for (let field of fields) {
+if (!field.value.trim()) {
+showModal('Validation Error', `Please fill in all required fields.`);
+field.focus();
+return false;
+}
+}
+return true;
 }
 
 /********* SAVE FUNCTIONS *********/
-async function saveClient(){
-const data=[clientName.value,clientCompany.value,clientContact.value,clientEmail.value,clientProduct.value,clientStatus.value];
-await fetch(`${API}?action=create&sheet=Clients`,{method:"POST",body:JSON.stringify({data})});
-show('clients');
+async function saveClient() {
+const fields = [clientName, clientCompany, clientContact, clientEmail, clientProduct, clientStatus];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Save', 'Are you sure you want to save this client?', async () => {
+try {
+const data = fields.map(field => field.value);
+const response = await fetch(`${API}?action=create&sheet=Clients`, {
+method: "POST",
+body: JSON.stringify({ data })
+});
+if (!response.ok) throw new Error('Save failed');
+clearForm(fields);
+showModal('Success', 'Client saved successfully!', () => {
+// This will automatically close the modal and reload
+load('clients');
+});
+} catch (error) {
+showModal('Error', 'Failed to save client. Please try again.');
+}
+});
 }
 
-async function saveProject(){
-const data=[projectName.value,projectClientId.value,projectDesc.value,projectStart.value,projectEnd.value,projectStatus.value,projectCharged.value];
-await fetch(`${API}?action=create&sheet=Projects`,{method:"POST",body:JSON.stringify({data})});
-show('projects');
+async function saveProject() {
+const fields = [projectName, projectClientId, projectDesc, projectStart, projectEnd, projectStatus, projectCharged];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Save', 'Are you sure you want to save this project?', async () => {
+try {
+const data = fields.map(field => field.value);
+const response = await fetch(`${API}?action=create&sheet=Projects`, {
+method: "POST", 
+body: JSON.stringify({ data })
+});
+if (!response.ok) throw new Error('Save failed');
+clearForm(fields);
+showModal('Success', 'Project saved successfully!', () => {
+load('projects');
+});
+} catch (error) {
+showModal('Error', 'Failed to save project. Please try again.');
+}
+});
 }
 
-async function savePayment(){
-const data=[paymentProjectId.value,paymentAmount.value,paymentDate.value,paymentStatus.value];
-await fetch(`${API}?action=create&sheet=Payments`,{method:"POST",body:JSON.stringify({data})});
-show('payments');
+async function savePayment() {
+const fields = [paymentProjectId, paymentAmount, paymentDate, paymentStatus];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Save', 'Are you sure you want to save this payment?', async () => {
+try {
+const data = fields.map(field => field.value);
+const response = await fetch(`${API}?action=create&sheet=Payments`, {
+method: "POST",
+body: JSON.stringify({ data })
+});
+if (!response.ok) throw new Error('Save failed');
+clearForm(fields);
+showModal('Success', 'Payment saved successfully!', () => {
+load('payments');
+});
+} catch (error) {
+showModal('Error', 'Failed to save payment. Please try again.');
+}
+});
 }
 
-async function saveTodo(){
-const data=[todoTask.value,todoDue.value,todoDone.checked];
-await fetch(`${API}?action=create&sheet=Todos`,{method:"POST",body:JSON.stringify({data})});
-show('todos');
+async function saveTodo() {
+const fields = [todoTask, todoDue];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Save', 'Are you sure you want to save this todo?', async () => {
+try {
+const data = [todoTask.value, todoDue.value, todoDone.checked];
+const response = await fetch(`${API}?action=create&sheet=Todos`, {
+method: "POST",
+body: JSON.stringify({ data })
+});
+if (!response.ok) throw new Error('Save failed');
+clearForm([...fields, todoDone]);
+showModal('Success', 'Todo saved successfully!', () => {
+load('todos');
+});
+} catch (error) {
+showModal('Error', 'Failed to save todo. Please try again.');
+}
+});
 }
 
-async function saveTrack(){
-const data=[trackProjectId.value,trackStage.value,trackNotes.value];
-await fetch(`${API}?action=create&sheet=ProjectTracking`,{method:"POST",body:JSON.stringify({data})});
-show('tracking');
+async function saveTrack() {
+const fields = [trackProjectId, trackStage, trackNotes];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Save', 'Are you sure you want to save this tracking entry?', async () => {
+try {
+const data = fields.map(field => field.value);
+const response = await fetch(`${API}?action=create&sheet=ProjectTracking`, {
+method: "POST",
+body: JSON.stringify({ data })
+});
+if (!response.ok) throw new Error('Save failed');
+clearForm(fields);
+showModal('Success', 'Tracking entry saved successfully!', () => {
+load('tracking');
+});
+} catch (error) {
+showModal('Error', 'Failed to save tracking entry. Please try again.');
+}
+});
 }
 
 /******** EMAIL ********/
-async function sendMail(){
-await fetch(`${API}?action=sendEmail`,{method:"POST",
-body:JSON.stringify({to:emailTo.value,subject:emailSubject.value,body:emailBody.value})
+async function sendMail() {
+const fields = [emailTo, emailSubject, emailBody];
+if (!validateForm(fields)) return;
+
+showModal('Confirm Send', 'Are you sure you want to send this email?', async () => {
+try {
+const response = await fetch(`${API}?action=sendEmail`, {
+method: "POST",
+body: JSON.stringify({
+to: emailTo.value,
+subject: emailSubject.value,
+body: emailBody.value
+})
 });
-alert("✅ Email sent!");
+if (!response.ok) throw new Error('Email sending failed');
+clearForm(fields);
+showModal('Success', 'Email sent successfully!');
+} catch (error) {
+showModal('Error', 'Failed to send email. Please try again.');
 }
+});
+}
+
+/* Helper function to clear forms */
+function clearForm(fields) {
+fields.forEach(field => {
+if (field.type === 'checkbox') {
+field.checked = false;
+} else {
+field.value = '';
+}
+});
+}
+
+// Initialize first screen
+document.addEventListener('DOMContentLoaded', function() {
+load('clients');
+});
+
+// Fix for modal backdrop issue
+document.addEventListener('hidden.bs.modal', function () {
+document.body.classList.remove('modal-open');
+const backdrops = document.getElementsByClassName('modal-backdrop');
+while (backdrops.length > 0) {
+backdrops[0].parentNode.removeChild(backdrops[0]);
+}
+});
 </script>
 </body>
 </html>
