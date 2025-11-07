@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f4f6f8}
+    .card{background:#fff;padding:26px;border-radius:12px;box-shadow:0 6px 24px rgba(10,10,10,.06);width:340px;box-sizing:border-box}
+    h2{margin:0 0 12px;font-size:20px}
+    label{display:block;font-size:13px;margin:10px 0 6px;color:#333}
+    input[type="email"], input[type="password"]{
+      width:100%;padding:10px;border-radius:8px;border:1px solid #e3e6ea;box-sizing:border-box;font-size:14px
+    }
+    .row{margin-top:14px}
+    button{
+      width:100%;padding:11px;border-radius:8px;border:0;background:#0b79ff;color:#fff;font-weight:600;cursor:pointer;font-size:15px
+    }
+    .button--loading{opacity:.9;pointer-events:none}
+    .msg{margin-top:12px;font-size:13px}
+    .error{color:#c92a2a}
+    .success{color:#0b813d}
+    .small{font-size:12px;color:#666;margin-top:8px}
+  </style>
+</head>
+<body>
+
+  <div class="card" role="main" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Sign in</h2>
+
+    <form id="loginForm" autocomplete="on">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
+
+      <div class="row">
+        <button id="submitBtn" type="submit">Sign in</button>
+      </div>
+
+      <div id="message" class="msg" role="status" aria-live="polite"></div>
+
+      <div class="small">Make sure your browser is online and this page is served over HTTPS.</div>
+    </form>
+  </div>
+
+  <script>
+    // Replace with your deployed Apps Script Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMRKtmJCfUhuMwUpWWYIDvLjEsE5WuIE3CkLhKg0krY4K0977AqyFG1ydCCtP0K8Tg/exec";
+
+    const form = document.getElementById('loginForm');
+    const messageEl = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function showMessage(text, type){
+      messageEl.textContent = text || '';
+      messageEl.className = 'msg ' + (type === 'error' ? 'error' : (type === 'success' ? 'success' : ''));
+    }
+
+    function setLoading(loading){
+      if (loading) {
+        submitBtn.classList.add('button--loading');
+        submitBtn.textContent = 'Signing in…';
+      } else {
+        submitBtn.classList.remove('button--loading');
+        submitBtn.textContent = 'Sign in';
+      }
+    }
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      showMessage('');
+      setLoading(true);
+
+      const email = (document.getElementById('email').value || '').trim();
+      const password = (document.getElementById('password').value || '').trim();
+
+      if (!email || !password) {
+        showMessage('Please enter both email and password.', 'error');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Send as application/x-www-form-urlencoded (Apps Script expects parameters)
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ email, password })
+        });
+
+        // HTTP-level errors (404/500) — attempt to parse JSON if possible
+        if (!res.ok) {
+          let txt = await res.text().catch(()=> '');
+          showMessage('Server error: ' + (txt || res.statusText || res.status), 'error');
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json().catch(() => null);
+        if (!data) {
+          showMessage('Invalid server response.', 'error');
+          setLoading(false);
+          return;
+        }
+
+        if (data.url) {
+          // Success — redirect to user-specific URL
+          showMessage('Login successful. Redirecting...', 'success');
+          // small delay so user sees message (optional)
+          setTimeout(() => { window.location.href = data.url; }, 350);
+        } else if (data.error) {
+          showMessage(data.error, 'error');
+        } else {
+          showMessage('Unknown response from server.', 'error');
+        }
+
+      } catch (err) {
+        console.error('Network or fetch error', err);
+        showMessage('Network or server error. Open console for details.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
