@@ -1,130 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Login</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secure App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    :root{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f4f6f8}
-    .card{background:#fff;padding:26px;border-radius:12px;box-shadow:0 6px 24px rgba(10,10,10,.06);width:340px;box-sizing:border-box}
-    h2{margin:0 0 12px;font-size:20px}
-    label{display:block;font-size:13px;margin:10px 0 6px;color:#333}
-    input[type="email"], input[type="password"]{
-      width:100%;padding:10px;border-radius:8px;border:1px solid #e3e6ea;box-sizing:border-box;font-size:14px
-    }
-    .row{margin-top:14px}
-    button{
-      width:100%;padding:11px;border-radius:8px;border:0;background:#0b79ff;color:#fff;font-weight:600;cursor:pointer;font-size:15px
-    }
-    .button--loading{opacity:.9;pointer-events:none}
-    .msg{margin-top:12px;font-size:13px}
-    .error{color:#c92a2a}
-    .success{color:#0b813d}
-    .small{font-size:12px;color:#666;margin-top:8px}
+    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+    .card { border-radius: 12px; }
+    .spinner-border-sm { width: 1rem; height: 1rem; }
   </style>
 </head>
 <body>
+<div class="container py-5">
+  <!-- AUTH -->
+  <div id="authSection" class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
 
-  <div class="card" role="main" aria-labelledby="loginTitle">
-    <h2 id="loginTitle">Sign in</h2>
+          <!-- LOGIN -->
+          <div id="loginForm">
+            <h4 class="text-center mb-4">Login</h4>
+            <form onsubmit="login(event)">
+              <div class="mb-3"><input type="email" id="loginEmail" class="form-control" placeholder="Email" required /></div>
+              <div class="mb-3"><input type="password" id="loginPass" class="form-control" placeholder="Password" required /></div>
+              <button type="submit" id="loginBtn" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="text-center mt-3">
+              <small><a href="#" onclick="show('register')">Register</a> | <a href="#" onclick="show('reset')">Forgot?</a></small>
+            </div>
+          </div>
 
-    <form id="loginForm" autocomplete="on">
-      <label for="email">Email</label>
-      <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+          <!-- REGISTER -->
+          <div id="registerForm" class="d-none">
+            <h4 class="text-center mb-4">Register</h4>
+            <form onsubmit="register(event)">
+              <div class="mb-3"><input type="text" id="regName" class="form-control" placeholder="Name" required /></div>
+              <div class="mb-3"><input type="email" id="regEmail" class="form-control" placeholder="Email" required /></div>
+              <div class="mb-3"><input type="password" id="regPass" class="form-control" placeholder="Password" required /></div>
+              <button type="submit" id="regBtn" class="btn btn-success w-100">Register</button>
+            </form>
+            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
+          </div>
 
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
+          <!-- RESET 1 -->
+          <div id="resetForm" class="d-none">
+            <h4 class="text-center mb-4">Reset Password</h4>
+            <form onsubmit="requestOtp(event)">
+              <div class="mb-3"><input type="email" id="resetEmail" class="form-control" placeholder="Email" required /></div>
+              <button type="submit" id="otpBtn" class="btn btn-warning w-100">Send OTP</button>
+            </form>
+            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
+          </div>
 
-      <div class="row">
-        <button id="submitBtn" type="submit">Sign in</button>
+          <!-- RESET 2 -->
+          <div id="verifyOtpForm" class="d-none">
+            <h4 class="text-center mb-4">Enter OTP</h4>
+            <form onsubmit="verifyOtp(event)">
+              <div class="mb-3"><input type="text" id="otpCode" class="form-control text-center" placeholder="6-digit OTP" maxlength="6" required /></div>
+              <div class="mb-3"><input type="password" id="newPass" class="form-control" placeholder="New password" required /></div>
+              <button type="submit" id="resetBtn" class="btn btn-primary w-100">Update</button>
+            </form>
+            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
+          </div>
+
+        </div>
       </div>
-
-      <div id="message" class="msg" role="status" aria-live="polite"></div>
-
-      <div class="small">Make sure your browser is online and this page is served over HTTPS.</div>
-    </form>
+    </div>
   </div>
 
-  <script>
-    // Replace with your deployed Apps Script Web App URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwMRKtmJCfUhuMwUpWWYIDvLjEsE5WuIE3CkLhKg0krY4K0977AqyFG1ydCCtP0K8Tg/exec";
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="d-none">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 id="welcomeMsg"></h5>
+        <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
+      </div>
+      <div class="card-body">
+        <p>Welcome! Your session is active.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-    const form = document.getElementById('loginForm');
-    const messageEl = document.getElementById('message');
-    const submitBtn = document.getElementById('submitBtn');
+<script>
+  // === CONFIG ===
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzM9rqtqcSTPWNy05gHY_PiC6ITEapAZ1MeBUH-yzhw6grQ8AANDKBlYrlXOM8wKAqW8w/exec';
 
-    function showMessage(text, type){
-      messageEl.textContent = text || '';
-      messageEl.className = 'msg ' + (type === 'error' ? 'error' : (type === 'success' ? 'success' : ''));
-    }
-
-    function setLoading(loading){
-      if (loading) {
-        submitBtn.classList.add('button--loading');
-        submitBtn.textContent = 'Signing in…';
-      } else {
-        submitBtn.classList.remove('button--loading');
-        submitBtn.textContent = 'Sign in';
-      }
-    }
-
-    form.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      showMessage('');
-      setLoading(true);
-
-      const email = (document.getElementById('email').value || '').trim();
-      const password = (document.getElementById('password').value || '').trim();
-
-      if (!email || !password) {
-        showMessage('Please enter both email and password.', 'error');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Send as application/x-www-form-urlencoded (Apps Script expects parameters)
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ email, password })
-        });
-
-        // HTTP-level errors (404/500) — attempt to parse JSON if possible
-        if (!res.ok) {
-          let txt = await res.text().catch(()=> '');
-          showMessage('Server error: ' + (txt || res.statusText || res.status), 'error');
-          setLoading(false);
-          return;
-        }
-
-        const data = await res.json().catch(() => null);
-        if (!data) {
-          showMessage('Invalid server response.', 'error');
-          setLoading(false);
-          return;
-        }
-
-        if (data.url) {
-          // Success — redirect to user-specific URL
-          showMessage('Login successful. Redirecting...', 'success');
-          // small delay so user sees message (optional)
-          setTimeout(() => { window.location.href = data.url; }, 350);
-        } else if (data.error) {
-          showMessage(data.error, 'error');
-        } else {
-          showMessage('Unknown response from server.', 'error');
-        }
-
-      } catch (err) {
-        console.error('Network or fetch error', err);
-        showMessage('Network or server error. Open console for details.', 'error');
-      } finally {
-        setLoading(false);
-      }
+  // === UI HELPERS ===
+  function show(id) {
+    ['login','register','reset','verifyOtp'].forEach(x => {
+      const el = document.getElementById(x + 'Form');
+      if (el) el.classList.toggle('d-none', x !== id);
     });
-  </script>
+  }
+
+  function $(selector) {
+    const el = document.querySelector(selector);
+    return el ? el.value.trim() : '';
+  }
+
+  function cookie(name, value = null, days = null) {
+    if (value === null) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : '';
+    }
+    if (days === null) {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+      return;
+    }
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/`;
+  }
+
+  function loading(btnId, on) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = on;
+    btn.innerHTML = on 
+      ? 'Wait... <span class="spinner-border spinner-border-sm"></span>' 
+      : btn.dataset.text;
+  }
+
+  // Save original button text
+  document.querySelectorAll('button[type="submit"]').forEach(b => {
+    b.dataset.text = b.innerText;
+  });
+
+  // === API CALL ===
+  async function api(action, data = {}) {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action, ...data }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Unknown error');
+    return result;
+  }
+
+  // === ON LOAD ===
+  window.addEventListener('load', async () => {
+    const token = cookie('token');
+    if (token) {
+      try {
+        const res = await api('validate', { token });
+        document.getElementById('welcomeMsg').textContent = `Hi, ${res.name}!`;
+        document.getElementById('authSection').classList.add('d-none');
+        document.getElementById('dashboard').classList.remove('d-none');
+      } catch (e) {
+        cookie('token', null);
+        show('login');
+      }
+    } else {
+      show('login');
+    }
+  });
+
+  // === ACTIONS ===
+  window.register = async (e) => {
+    e.preventDefault();
+    loading('regBtn', true);
+    try {
+      await api('register', {
+        email: $('#regEmail'),
+        password: $('#regPass'),
+        name: $('#regName')
+      });
+      Swal.fire('Success', 'Registration successful!', 'success');
+      show('login');
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      loading('regBtn', false);
+    }
+  };
+
+  window.login = async (e) => {
+    e.preventDefault();
+    loading('loginBtn', true);
+    try {
+      const res = await api('login', {
+        email: $('#loginEmail'),
+        password: $('#loginPass')
+      });
+      cookie('token', res.token, 1);
+      document.getElementById('welcomeMsg').textContent = `Hi, ${res.name}!`;
+      document.getElementById('authSection').classList.add('d-none');
+      document.getElementById('dashboard').classList.remove('d-none');
+      Swal.fire('Welcome!', `Hello ${res.name}!`, 'success');
+    } catch (err) {
+      Swal.fire('Login Failed', err.message, 'error');
+    } finally {
+      loading('loginBtn', false);
+    }
+  };
+
+  window.requestOtp = async (e) => {
+    e.preventDefault();
+    loading('otpBtn', true);
+    try {
+      const email = $('#resetEmail');
+      await api('requestOtp', { email });
+      Swal.fire('OTP Sent', 'Check your email.', 'success');
+      localStorage.setItem('resetEmail', email);
+      show('verifyOtp');
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      loading('otpBtn', false);
+    }
+  };
+
+  window.verifyOtp = async (e) => {
+    e.preventDefault();
+    loading('resetBtn', true);
+    try {
+      const email = localStorage.getItem('resetEmail');
+      await api('resetPassword', {
+        email,
+        otp: $('#otpCode'),
+        newPassword: $('#newPass')
+      });
+      Swal.fire('Success', 'Password updated!', 'success');
+      localStorage.removeItem('resetEmail');
+      show('login');
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      loading('resetBtn', false);
+    }
+  };
+
+  window.logout = async () => {
+    const token = cookie('token');
+    try { await api('logout', { token }); } catch {}
+    cookie('token', null);
+    document.getElementById('dashboard').classList.add('d-none');
+    document.getElementById('authSection').classList.remove('d-none');
+    show('login');
+    Swal.fire('Logged out', 'See you soon!', 'info');
+  };
+</script>
 </body>
 </html>
