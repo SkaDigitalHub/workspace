@@ -1,249 +1,831 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Secure App</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ska Digital Hub CRM - Data View</title>
+  <!-- Bootstrap 5 + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- SweetAlert -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
-    .card { border-radius: 12px; }
-    .spinner-border-sm { width: 1rem; height: 1rem; }
+    body { background:#f4f6f9; font-family:'Segoe UI',sans-serif; }
+    .navbar-brand { font-weight:600; }
+    .card-header { background:#212529; color:#fff; }
+    .flag-red { background:#dc3545 !important; color:#fff; }
+    .flag-yellow{ background:#ffc107 !important; color:#212529; }
+    .flag-green { background:#198754 !important; color:#fff; }
+    .dashboard-card { transition:transform .2s; }
+    .dashboard-card:hover { transform:translateY(-4px); }
+    .activity-list { max-height:220px; overflow-y:auto; }
+    .activity-item { font-size:0.9rem; }
+    .nav-link.active { background:#495057; font-weight:600; }
+    .export-btns { margin-bottom: 1rem; }
+    .action-btn { margin: 0 2px; font-size: 0.9em; }
+    .message-tab { cursor: pointer; padding: 8px 16px; border-bottom: 2px solid transparent; }
+    .message-tab.active { border-bottom: 2px solid #0d6efd; font-weight:600; }
+    .table th, .table td { vertical-align: middle; }
+    .filter-bar { background:#fff; border-radius:8px; padding:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    .filter-input { max-width:300px; }
+    /* PDF-only Table */
+    .pdf-table { display: none; }
+    .pdf-table.show { display: table; }
+    @media print { .no-print { display: none !important; } }
   </style>
 </head>
-<body>
-<div class="container py-5">
-  <!-- AUTH -->
-  <div id="authSection" class="row justify-content-center">
-    <div class="col-md-5">
-      <div class="card shadow-sm">
-        <div class="card-body">
+<body class="bg-light">
+<!-- Authentication Check -->
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbxikiNIi81cPsekdg_z8yClvwGQbp92z-AMQrNixtw-yK1KN6ZUSyVAc_i-IUoMf4MQ2Q/exec';
+  const token = localStorage.getItem('sessionToken');
 
-          <!-- LOGIN -->
-          <div id="loginForm">
-            <h4 class="text-center mb-4">Login</h4>
-            <form onsubmit="login(event)">
-              <div class="mb-3"><input type="email" id="loginEmail" class="form-control" placeholder="Email" required /></div>
-              <div class="mb-3"><input type="password" id="loginPass" class="form-control" placeholder="Password" required /></div>
-              <button type="submit" id="loginBtn" class="btn btn-primary w-100">Login</button>
-            </form>
-            <div class="text-center mt-3">
-              <small><a href="#" onclick="show('register')">Register</a> | <a href="#" onclick="show('reset')">Forgot?</a></small>
-            </div>
-          </div>
+  if (!token) {
+    location.href = 'login.html';
+  }
 
-          <!-- REGISTER -->
-          <div id="registerForm" class="d-none">
-            <h4 class="text-center mb-4">Register</h4>
-            <form onsubmit="register(event)">
-              <div class="mb-3"><input type="text" id="regName" class="form-control" placeholder="Name" required /></div>
-              <div class="mb-3"><input type="email" id="regEmail" class="form-control" placeholder="Email" required /></div>
-              <div class="mb-3"><input type="password" id="regPass" class="form-control" placeholder="Password" required /></div>
-              <button type="submit" id="regBtn" class="btn btn-success w-100">Register</button>
-            </form>
-            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
-          </div>
+  async function api(action, data) {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action, ...data }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    return resp.json();
+  }
 
-          <!-- RESET 1 -->
-          <div id="resetForm" class="d-none">
-            <h4 class="text-center mb-4">Reset Password</h4>
-            <form onsubmit="requestOtp(event)">
-              <div class="mb-3"><input type="email" id="resetEmail" class="form-control" placeholder="Email" required /></div>
-              <button type="submit" id="otpBtn" class="btn btn-warning w-100">Send OTP</button>
-            </form>
-            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
-          </div>
+  // Validate token on page load
+  api('validateToken', { token }).then(res => {
+    if (res.error) throw res.error;
+    console.log('User authenticated:', res.name);
+  }).catch(err => {
+    Swal.fire('Session Expired', err, 'warning').then(() => {
+      localStorage.removeItem('sessionToken');
+      location.href = 'login.html';
+    });
+  });
+</script>
 
-          <!-- RESET 2 -->
-          <div id="verifyOtpForm" class="d-none">
-            <h4 class="text-center mb-4">Enter OTP</h4>
-            <form onsubmit="verifyOtp(event)">
-              <div class="mb-3"><input type="text" id="otpCode" class="form-control text-center" placeholder="6-digit OTP" maxlength="6" required /></div>
-              <div class="mb-3"><input type="password" id="newPass" class="form-control" placeholder="New password" required /></div>
-              <button type="submit" id="resetBtn" class="btn btn-primary w-100">Update</button>
-            </form>
-            <div class="text-center mt-3"><small><a href="#" onclick="show('login')">Back</a></small></div>
-          </div>
+<header class="bg-dark text-white text-center py-3 mb-4">
+  <h1 class="mb-0">Ska Digital Hub CRM - Data View</h1>
+  <div class="text-end me-3">
+    <button id="logout" class="btn btn-outline-light btn-sm">Logout</button>
+  </div>
+</header>
 
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Menu</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" onclick="showSection('dashboard')">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('clients')">Clients</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('projects')">Projects</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('payments')">Payments</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('todos')">Todo List</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('project-tracking')">Project Tracking</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showSection('messages')">Messages</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- ==================== DASHBOARD ==================== -->
+  <section id="dashboard" class="mb-5">
+    <h2 class="mb-4">Overview Dashboard</h2>
+    <div class="row g-4" id="dashboardContent"></div>
+    <div class="card mt-5 shadow-sm">
+      <div class="card-header">Recent Activity</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush activity-list" id="activityList">
+          <li class="list-group-item text-center text-muted">Loading…</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CLIENTS ==================== -->
+  <section id="clients" class="mb-5" style="display:none;">
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterClients" placeholder="Search clients..." onkeyup="filterTable('clients')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="statusFilter" onchange="filterTable('clients')">
+          <option value="">All Status</option>
+          <option>scout</option><option>contacted</option><option>hold</option>
+          <option>interested</option><option>not interested</option><option>negotiation</option><option>closed</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('clients')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('clients')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Clients List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="clientsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr>
+              <th>ID</th><th>Name</th><th>Company</th><th>Contact</th><th>Email</th><th>Product/Service</th><th>Status</th><th class="no-print">Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="d-none">
-    <div class="card shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 id="welcomeMsg"></h5>
-        <button class="btn btn-sm btn-outline-danger" onclick="logout()">Logout</button>
+  <!-- ==================== PROJECTS ==================== -->
+  <section id="projects" class="mb-5" style="display:none;">
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterProjects" placeholder="Search projects..." onkeyup="filterTable('projects')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="projectStatusFilter" onchange="filterTable('projects')">
+          <option value="">All Status</option>
+          <option>In Progress</option><option>Planning</option><option>Active</option><option>Closed</option><option>Completed</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('projects')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('projects')">PDF</button>
       </div>
-      <div class="card-body">
-        <p>Welcome! Your session is active.</p>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Projects Overview
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="projectsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr>
+              <th>ID</th><th>Name</th><th>Client ID</th><th>Desc</th><th>Start</th><th>End</th><th>Status</th>
+              <th>Charged</th><th>Paid</th><th>Balance</th><th>Pay %</th>
+              <th>Stage</th><th>Progress %</th><th class="no-print">Actions</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PAYMENTS ==================== -->
+  <section id="payments" class="mb-5" style="display:none;">
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterPayments" placeholder="Search payments..." onkeyup="filterTable('payments')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="paymentStatusFilter" onchange="filterTable('payments')">
+          <option value="">All Status</option>
+          <option>Pending</option><option>Paid</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('payments')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('payments')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Payments List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="paymentsTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Project ID</th><th>Amount</th><th>Date</th><th>Status</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TODO LIST ==================== -->
+  <section id="todos" class="mb-5" style="display:none;">
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterTodos" placeholder="Search tasks..." onkeyup="filterTable('todos')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="todoStatusFilter" onchange="filterTable('todos')">
+          <option value="">All</option>
+          <option>Pending</option><option>Done</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('todos')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('todos')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Todo List
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="todosTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Task</th><th>Due</th><th>Done</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROJECT TRACKING ==================== -->
+  <section id="project-tracking" class="mb-5" style="display:none;">
+    <!-- FILTER BAR -->
+    <div class="filter-bar mt-4 d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterTracking" placeholder="Search project ID or notes..." onkeyup="filterTable('project-tracking')">
+      <div>
+        <select class="form-select d-inline-block w-auto me-2" id="stageFilter" onchange="filterTable('project-tracking')">
+          <option value="">All Stages</option>
+          <option value="1">Planning</option><option value="2">Design</option>
+          <option value="3">Development</option><option value="4">Testing</option><option value="5">Deployment</option>
+        </select>
+        <button class="btn btn-sm btn-success me-2" onclick="exportCSV('project-tracking')">CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="exportPDF('project-tracking')">PDF</button>
+      </div>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Tracking Records
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="trackingTable" class="table table-striped mb-0">
+            <thead class="table-dark"><tr><th>ID</th><th>Project ID</th><th>Stage</th><th>Notes</th><th class="no-print">Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MESSAGES ==================== -->
+  <section id="messages" class="mb-5" style="display:none;">
+    <h2 class="mb-4">Messages Center</h2>
+
+    <div class="d-flex mb-3">
+      <div class="me-3 message-tab active" data-filter="balance">Clients with Balance</div>
+      <div class="me-3 message-tab" data-filter="completed">Completed Projects</div>
+      <div class="message-tab" data-filter="new">New Clients</div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar d-flex justify-content-between align-items-center no-print">
+      <input type="text" class="form-control filter-input" id="filterMessages" placeholder="Search clients..." onkeyup="filterMessages()">
+      <button class="btn btn-primary" onclick="openMessageModal()">Send Message</button>
+    </div>
+
+    <div class="card mt-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center no-print">
+        Message Clients
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="messageClientsTable" class="table table-striped mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Name</th><th>Company</th><th>Contact</th><th>Email</th><th>Balance</th><th>Status</th><th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+<!-- Email Modal (per row) -->
+<div class="modal fade" id="emailModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="emailRecipient">
+        <div class="mb-3"><label>To:</label><input type="email" class="form-control" id="emailTo" readonly></div>
+        <div class="mb-3"><label>Subject:</label><input type="text" class="form-control" id="emailSubject"></div>
+        <div class="mb-3"><label>Message:</label><textarea class="form-control" id="emailBody" rows="5"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="sendEmail()">Send</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Message Modal (Messages tab) -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Message to <span id="msgClientName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" id="msgTypeTabs">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabEmail">Email</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabWhatsApp">WhatsApp</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabSMS">SMS</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tabEmail">
+            <input type="hidden" id="msgEmail">
+            <div class="mb-3"><label>Subject:</label><input type="text" class="form-control" id="msgEmailSubject"></div>
+            <div class="mb-3"><label>Message:</label><textarea class="form-control" id="msgEmailBody" rows="6"></textarea></div>
+          </div>
+          <div class="tab-pane fade" id="tabWhatsApp">
+            <input type="hidden" id="msgWhatsAppPhone">
+            <div class="mb-3"><label>Message:</label><textarea class="form-control" id="msgWhatsAppText" rows="6"></textarea></div>
+          </div>
+          <div class="tab-pane fade" id="tabSMS">
+            <input type="hidden" id="msgSMSPhone">
+            <div class="mb-3"><label>Message (160 chars):</label><textarea class="form-control" id="msgSMSText" rows="4" maxlength="160"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="sendActiveMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="background: blue; color: white; padding: 10px; text-align: left;">
+  <a class="btn btn-primary" href="input.html">Next</a>
+</div>
+  
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // === CONFIG ===
-  const API_URL = 'https://script.google.com/macros/s/AKfycbzM9rqtqcSTPWNy05gHY_PiC6ITEapAZ1MeBUH-yzhw6grQ8AANDKBlYrlXOM8wKAqW8w/exec';
+  // ==== AUTHENTICATION ====
+  document.getElementById('logout').onclick = () => {
+    localStorage.removeItem('sessionToken');
+    location.href = 'login.html';
+  };
 
-  // === UI HELPERS ===
-  function show(id) {
-    ['login','register','reset','verifyOtp'].forEach(x => {
-      const el = document.getElementById(x + 'Form');
-      if (el) el.classList.toggle('d-none', x !== id);
+  // ==== CONFIG ====
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOJQSRAXcVsHWoUQHlQYVLSt202_UNFtJ3KUkgeE165eBzw_LDVN3WumibZqI5e7_OSw/exec';
+  const STAGE_PROGRESS = {1:20, 2:40, 3:60, 4:80, 5:100};
+  const STAGE_NAME = {1:'Planning',2:'Design',3:'Development',4:'Testing',5:'Deployment'};
+  let clientsData = [], projectsData = [], paymentsData = [], selectedClient = null;
+
+  // ==== MENU & SECTION HANDLING ====
+  function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = 'block';
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`.nav-link[onclick="showSection('${id}')"]`)?.classList.add('active');
+
+    if (id === 'dashboard') loadDashboard();
+    else if (id === 'messages') loadMessages();
+    else loadData(id);
+  }
+
+  // ==== FETCH SHEET (READ GET) ====
+  async function fetchSheet(sheet) {
+    try {
+      console.log(`Fetching ${sheet} from ${SCRIPT_URL}?action=read&sheet=${sheet}`);
+      const r = await fetch(`${SCRIPT_URL}?action=read&sheet=${sheet}`);
+      if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+      const data = await r.json();
+      console.log(`Fetched ${sheet}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Error fetching ${sheet}:`, error);
+      alert(`Error loading ${sheet}: ${error.message}. Please check your Google Apps Script URL and deployment.`);
+      return [];
+    }
+  }
+
+  // ==== UNIVERSAL POST HELPER (uses JSON) ====
+  async function postToScript(payload) {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('postToScript error', err, payload);
+      return { error: err.message || err.toString() };
+    }
+  }
+
+  // ==== FILTER TABLE (ALL SECTIONS) ====
+  function filterTable(section) {
+    const searchInputId = `filter${section.charAt(0).toUpperCase() + section.slice(1)}`;
+    const search = document.getElementById(searchInputId)?.value.toLowerCase() || '';
+    const tbody = document.querySelector(`#${section}Table tbody`);
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr');
+    let filterValue = '';
+
+    if (section === 'clients') filterValue = document.getElementById('statusFilter')?.value.toLowerCase() || '';
+    else if (section === 'projects') filterValue = document.getElementById('projectStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'payments') filterValue = document.getElementById('paymentStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'todos') filterValue = document.getElementById('todoStatusFilter')?.value.toLowerCase() || '';
+    else if (section === 'project-tracking') filterValue = document.getElementById('stageFilter')?.value || '';
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const statusCell = row.cells[
+        section === 'project-tracking' ? 2 :
+        section === 'todos' ? 3 :
+        section === 'payments' ? 4 : 6
+      ];
+      const status = statusCell ? statusCell.textContent.toLowerCase() : '';
+      const matchesSearch = text.includes(search);
+      const matchesFilter = !filterValue || status.includes(filterValue);
+      row.style.display = matchesSearch && matchesFilter ? '' : 'none';
     });
   }
 
-  function $(selector) {
-    const el = document.querySelector(selector);
-    return el ? el.value.trim() : '';
-  }
-
-  function cookie(name, value = null, days = null) {
-    if (value === null) {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? match[2] : '';
-    }
-    if (days === null) {
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-      return;
-    }
-    const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/`;
-  }
-
-  function loading(btnId, on) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    btn.disabled = on;
-    btn.innerHTML = on 
-      ? 'Wait... <span class="spinner-border spinner-border-sm"></span>' 
-      : btn.dataset.text;
-  }
-
-  // Save original button text
-  document.querySelectorAll('button[type="submit"]').forEach(b => {
-    b.dataset.text = b.innerText;
-  });
-
-  // === API CALL ===
-  async function api(action, data = {}) {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action, ...data }),
-      headers: { 'Content-Type': 'application/json' }
+  function filterMessages() {
+    const search = document.getElementById('filterMessages')?.value.toLowerCase() || '';
+    const rows = document.querySelectorAll('#messageClientsTable tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
     });
-    const result = await response.json();
-    if (!result.success) throw new Error(result.error || 'Unknown error');
-    return result;
   }
 
-  // === ON LOAD ===
-  window.addEventListener('load', async () => {
-    const token = cookie('token');
-    if (token) {
-      try {
-        const res = await api('validate', { token });
-        document.getElementById('welcomeMsg').textContent = `Hi, ${res.name}!`;
-        document.getElementById('authSection').classList.add('d-none');
-        document.getElementById('dashboard').classList.remove('d-none');
-      } catch (e) {
-        cookie('token', null);
-        show('login');
+  // ==== LOAD DATA (WITH FILTER RESET) ====
+  async function loadData(section) {
+    const sheet = getSheetName(section);
+    const data = await fetchSheet(sheet);
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (section === 'clients') data.forEach(row => renderClientRow(row, tbody));
+    else if (section === 'projects') {
+      const pays = await fetchSheet('Payments');
+      const tracks = await fetchSheet('ProjectTracking');
+      data.forEach(row => renderProjectRow(row, pays, tracks, tbody));
+    } else if (section === 'todos') data.forEach(row => renderTodoRow(row, tbody));
+    else data.forEach(row => renderGenericRow(row, section, tbody));
+
+    // Reset filters
+    const input = document.getElementById(`filter${section.charAt(0).toUpperCase() + section.slice(1)}`);
+    if (input) input.value = '';
+    const select = document.querySelector(`#${section} select[onchange]`);
+    if (select) select.value = '';
+    filterTable(section);
+  }
+
+  function getSheetName(sec) {
+    const map = { clients:'Clients', projects:'Projects', payments:'Payments', todos:'Todos', 'project-tracking':'ProjectTracking' };
+    return map[sec];
+  }
+
+  // ==== RENDER ROWS ====
+  function renderClientRow(row, tbody) {
+    // guard for unexpected row shape
+    const [id = '', name = '', company = '', contact = '', email = '', product = '', status = ''] = row || [];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(company)}</td><td>${escapeHtml(contact)}</td><td>${escapeHtml(email)}</td><td>${escapeHtml(product)}</td><td>${escapeHtml(status)}</td>
+      <td class="no-print">
+        <button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(email)}', '${escapeAttr(name)}')">Email</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
+  async function renderProjectRow(row, pays, tracks, tbody) {
+    const [id = '', name = '', clientId = '', desc = '', start = '', end = '', status = '', charged = 0] = row || [];
+    const client = clientsData.find(c => c[0] == clientId) || [];
+    const clientName = client[1] || 'Unknown';
+    const clientEmail = client[4] || '';
+    const paid = (pays || []).filter(p => p[1] == id && p[4] === 'Paid').reduce((s,p) => s + Number(p[2] || 0), 0);
+    const balance = Number(charged || 0) - paid;
+    const payPct = charged > 0 ? (paid / charged) * 100 : 0;
+    const payClass = payPct >= 100 ? 'flag-green' : payPct >= 50 ? 'flag-yellow' : 'flag-red';
+    const track = (tracks || []).filter(t => t[1] == id).sort((a,b) => b[2] - a[2])[0];
+    const stage = track ? Number(track[2]) : 0;
+    const progPct = STAGE_PROGRESS[stage] || 0;
+    const progClass = progPct >= 100 ? 'flag-green' : progPct >= 50 ? 'flag-yellow' : 'flag-red';
+    const stageName = STAGE_NAME[stage] || 'Not Started';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(clientId)}</td><td>${escapeHtml(desc)}</td><td>${escapeHtml(start)}</td><td>${escapeHtml(end)}</td><td>${escapeHtml(status)}</td>
+      <td>${charged}</td><td>${paid.toFixed(2)}</td><td>${balance.toFixed(2)}</td>
+      <td><span class="${payClass} px-2 rounded">${payPct.toFixed(1)}%</span></td>
+      <td>${escapeHtml(stageName)}</td><td><span class="${progClass} px-2 rounded">${progPct}%</span></td>
+      <td class="no-print">
+        ${clientEmail ? `<button class="btn btn-sm btn-primary action-btn" onclick="openEmailModal('${escapeAttr(clientEmail)}', '${escapeAttr(clientName)}')">Email Client</button>` : ''}
+      </td>`;
+    tbody.appendChild(tr);
+  }
+
+  function renderTodoRow(row, tbody) {
+    const [id = '', task = '', due = '', done = 'Pending'] = row || [];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${id}</td><td>${escapeHtml(task)}</td><td>${escapeHtml(due)}</td><td>${escapeHtml(done)}</td>
+      <td class="no-print"></td>`;
+    tbody.appendChild(tr);
+  }
+
+  function renderGenericRow(row, section, tbody) {
+    const tr = document.createElement('tr');
+    row.forEach(cell => tr.innerHTML += `<td>${escapeHtml(cell)}</td>`);
+    tr.innerHTML += `<td class="no-print"></td>`;
+    tbody.appendChild(tr);
+  }
+
+  // ==== EMAIL MODAL (per row) ====
+  function openEmailModal(to, name) {
+    document.getElementById('emailTo').value = to || '';
+    document.getElementById('emailRecipient').value = to || '';
+    document.getElementById('emailSubject').value = `Update for ${name || ''}`;
+    document.getElementById('emailBody').value = `Hi ${name || ''},\n\nHope this finds you well.\n\nBest,\nSka Digital Hub`;
+    new bootstrap.Modal(document.getElementById('emailModal')).show();
+  }
+
+  async function sendEmail() {
+    const to = document.getElementById('emailRecipient').value;
+    const subject = document.getElementById('emailSubject').value;
+    const body = document.getElementById('emailBody').value;
+    try {
+      const result = await postToScript({ action: 'sendEmail', to, subject, body });
+      if (result && result.success) {
+        alert('Email sent!');
+        bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+      } else {
+        alert('Failed to send email: ' + (result.error || JSON.stringify(result)));
       }
-    } else {
-      show('login');
+    } catch (error) {
+      alert('Failed to send email: ' + error);
     }
-  });
+  }
 
-  // === ACTIONS ===
-  window.register = async (e) => {
-    e.preventDefault();
-    loading('regBtn', true);
-    try {
-      await api('register', {
-        email: $('#regEmail'),
-        password: $('#regPass'),
-        name: $('#regName')
+  // ==== MESSAGES SECTION ====
+  async function loadMessages() {
+    [clientsData, projectsData, paymentsData] = await Promise.all([
+      fetchSheet('Clients'), fetchSheet('Projects'), fetchSheet('Payments')
+    ]);
+
+    document.querySelectorAll('.message-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.message-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderMessageClients(tab.dataset.filter);
+      };
+    });
+
+    renderMessageClients('balance');
+  }
+
+  function calculateBalances() {
+    const balances = {};
+    projectsData.forEach(p => {
+      const clientId = p[2];
+      const charged = Number(p[7]) || 0;
+      const paid = paymentsData.filter(pay => pay[1] == p[0] && pay[4] === 'Paid').reduce((s,p) => s + Number(p[2] || 0), 0);
+      balances[clientId] = (balances[clientId] || 0) + (charged - paid);
+    });
+    return balances;
+  }
+
+  function renderMessageClients(filter) {
+    const tbody = document.querySelector('#messageClientsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const balances = calculateBalances();
+
+    let filtered = [];
+
+    if (filter === 'balance') {
+      filtered = clientsData.filter(c => (balances[c[0]] || 0) > 0).map(c => ({ ...c, balance: balances[c[0]] }));
+    } else if (filter === 'completed') {
+      filtered = projectsData.filter(p => ['Closed','Completed'].includes(p[6])).map(p => {
+        const client = clientsData.find(c => c[0] == p[2]);
+        return client ? { ...client, projectName: p[1], balance: 0 } : null;
+      }).filter(Boolean);
+    } else if (filter === 'new') {
+      const last7days = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      filtered = clientsData.filter(c => {
+        const ts = c[c.length - 1];
+        return ts && new Date(ts) > last7days;
       });
-      Swal.fire('Success', 'Registration successful!', 'success');
-      show('login');
-    } catch (err) {
-      Swal.fire('Error', err.message, 'error');
-    } finally {
-      loading('regBtn', false);
     }
-  };
 
-  window.login = async (e) => {
-    e.preventDefault();
-    loading('loginBtn', true);
+    filtered.forEach(client => {
+      const [id, name, company, contact, email] = client;
+      const balance = client.balance || 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(name)}</td><td>${escapeHtml(company)}</td><td>${escapeHtml(contact || '-')}</td><td>${escapeHtml(email || '-')}</td>
+        <td>${balance > 0 ? '$' + balance.toFixed(2) : '-'}</td>
+        <td>${filter === 'completed' ? 'Project Done' : filter === 'new' ? 'New' : 'Debt'}</td>
+        <td class="no-print"><button class="btn btn-sm btn-primary" onclick="selectClientForMessage(${id})">Send</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function selectClientForMessage(id) {
+    selectedClient = clientsData.find(c => c[0] == id);
+    if (!selectedClient) return alert('Client not found');
+
+    document.getElementById('msgClientName').textContent = selectedClient[1];
+    document.getElementById('msgEmail').value = selectedClient[4] || '';
+    document.getElementById('msgWhatsAppPhone').value = selectedClient[3] || '';
+    document.getElementById('msgSMSPhone').value = selectedClient[3] || '';
+
+    const name = selectedClient[1];
+    document.getElementById('msgEmailSubject').value = `Payment Reminder - ${name}`;
+    document.getElementById('msgEmailBody').value = `Hi ${name},\n\nYour outstanding balance is due. Please settle soon.\n\nThank you!\nSka Digital Hub`;
+    document.getElementById('msgWhatsAppText').value = `Hi ${name}, your balance is due. Please pay soon.`;
+    document.getElementById('msgSMSText').value = `Hi ${name}, balance due. Pay now.`;
+
+    new bootstrap.Modal(document.getElementById('messageModal')).show();
+  }
+
+  // FIXED: Added missing openMessageModal function
+  function openMessageModal() {
+    // This opens a generic message modal without a specific client
+    document.getElementById('msgClientName').textContent = 'All Clients';
+    document.getElementById('msgEmail').value = '';
+    document.getElementById('msgWhatsAppPhone').value = '';
+    document.getElementById('msgSMSPhone').value = '';
+
+    document.getElementById('msgEmailSubject').value = 'Important Update from Ska Digital Hub';
+    document.getElementById('msgEmailBody').value = 'Dear client,\n\nWe have an important update for you.\n\nBest regards,\nSka Digital Hub Team';
+    document.getElementById('msgWhatsAppText').value = 'Hi, we have an important update for you.';
+    document.getElementById('msgSMSText').value = 'Important update from Ska Digital Hub';
+
+    new bootstrap.Modal(document.getElementById('messageModal')).show();
+  }
+
+  async function sendActiveMessage() {
+    const active = document.querySelector('#msgTypeTabs .nav-link.active')?.getAttribute('href');
+    if (active === '#tabEmail') await sendEmailMessage();
+    else if (active === '#tabWhatsApp') sendWhatsAppMessage();
+    else if (active === '#tabSMS') sendSMSMessage();
+  }
+
+  async function sendEmailMessage() {
+    const to = document.getElementById('msgEmail').value;
+    const subject = document.getElementById('msgEmailSubject').value;
+    const body = document.getElementById('msgEmailBody').value;
+    if (!to || !subject || !body) return alert('Fill all fields');
+
     try {
-      const res = await api('login', {
-        email: $('#loginEmail'),
-        password: $('#loginPass')
+      const result = await postToScript({ action: 'sendEmail', to, subject, body });
+      if (result && result.success) {
+        alert('Email sent!');
+        bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+      } else {
+        alert('Failed to send email: ' + (result.error || JSON.stringify(result)));
+      }
+    } catch (error) {
+      alert('Failed to send email: ' + error);
+    }
+  }
+
+  function sendWhatsAppMessage() {
+    const phone = document.getElementById('msgWhatsAppPhone').value.replace(/[^\d]/g, '');
+    const msg = encodeURIComponent(document.getElementById('msgWhatsAppText').value);
+    if (!phone || !msg) return alert('Fill message');
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+  }
+
+  function sendSMSMessage() {
+    const phone = document.getElementById('msgSMSPhone').value.replace(/[^\d]/g, '');
+    const msg = encodeURIComponent(document.getElementById('msgSMSText').value);
+    if (!phone || !msg) return alert('Fill message');
+    window.open(`sms:${phone}?body=${msg}`, '_blank');
+    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+  }
+
+  // ==== DASHBOARD ====
+  async function loadDashboard() {
+    const [clients, projects, payments, todos, tracks] = await Promise.all([
+      fetchSheet('Clients'), fetchSheet('Projects'), fetchSheet('Payments'),
+      fetchSheet('Todos'), fetchSheet('ProjectTracking')
+    ]);
+    clientsData = clients; projectsData = projects; paymentsData = payments;
+
+    const content = document.getElementById('dashboardContent');
+    content.innerHTML = '';
+    addCard(content, 'bi-people', 'Total Clients', clients.length);
+    addCard(content, 'bi-folder', 'Active Projects', projects.filter(p => !['Closed','Completed'].includes(p[6])).length);
+    addCard(content, 'bi-currency-dollar', 'Total Revenue', `$${projects.reduce((s,p)=>s+(Number(p[7])||0),0).toFixed(2)}`);
+    addCard(content, 'bi-check-circle', 'Completed Tasks', todos.filter(t => t[3] === 'Done').length);
+
+    const activity = document.getElementById('activityList');
+    activity.innerHTML = '';
+    const recent = [...clients.slice(-3), ...projects.slice(-3), ...payments.slice(-3)].sort((a,b)=>b[0]-a[0]);
+    recent.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item activity-item';
+      li.textContent = `New ${r[1]} added`;
+      activity.appendChild(li);
+    });
+  }
+
+  function addCard(parent, icon, title, value) {
+    const div = document.createElement('div');
+    div.className = 'col-md-3';
+    div.innerHTML = `<div class="card dashboard-card shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi ${icon} fs-1 text-primary"></i>
+        <h5 class="mt-2">${title}</h5>
+        <h3>${value}</h3>
+      </div>
+    </div>`;
+    parent.appendChild(div);
+  }
+
+  // ==== EXPORT CSV / PDF ====
+  function exportCSV(section) {
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const table = document.querySelector(`#${tableId}`);
+    if (!table) return;
+    let csv = [];
+    table.querySelectorAll('tr').forEach(tr => {
+      const row = [];
+      tr.querySelectorAll('th, td').forEach(cell => {
+        if (!cell.classList.contains('no-print')) row.push(`"${cell.textContent.replace(/"/g, '""')}"`);
       });
-      cookie('token', res.token, 1);
-      document.getElementById('welcomeMsg').textContent = `Hi, ${res.name}!`;
-      document.getElementById('authSection').classList.add('d-none');
-      document.getElementById('dashboard').classList.remove('d-none');
-      Swal.fire('Welcome!', `Hello ${res.name}!`, 'success');
-    } catch (err) {
-      Swal.fire('Login Failed', err.message, 'error');
-    } finally {
-      loading('loginBtn', false);
-    }
-  };
+      if (row.length > 0) csv.push(row.join(','));
+    });
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${section}.csv`; a.click();
+  }
 
-  window.requestOtp = async (e) => {
-    e.preventDefault();
-    loading('otpBtn', true);
-    try {
-      const email = $('#resetEmail');
-      await api('requestOtp', { email });
-      Swal.fire('OTP Sent', 'Check your email.', 'success');
-      localStorage.setItem('resetEmail', email);
-      show('verifyOtp');
-    } catch (err) {
-      Swal.fire('Error', err.message, 'error');
-    } finally {
-      loading('otpBtn', false);
-    }
-  };
+  async function exportPDF(section) {
+    const tableId = section === 'project-tracking' ? 'trackingTable' : `${section}Table`;
+    const table = document.querySelector(`#${tableId}`);
+    if (!table) return;
 
-  window.verifyOtp = async (e) => {
-    e.preventDefault();
-    loading('resetBtn', true);
-    try {
-      const email = localStorage.getItem('resetEmail');
-      await api('resetPassword', {
-        email,
-        otp: $('#otpCode'),
-        newPassword: $('#newPass')
-      });
-      Swal.fire('Success', 'Password updated!', 'success');
-      localStorage.removeItem('resetEmail');
-      show('login');
-    } catch (err) {
-      Swal.fire('Error', err.message, 'error');
-    } finally {
-      loading('resetBtn', false);
-    }
-  };
+    const clone = table.cloneNode(true);
+    clone.querySelectorAll('.no-print').forEach(el => el.remove());
 
-  window.logout = async () => {
-    const token = cookie('token');
-    try { await api('logout', { token }); } catch {}
-    cookie('token', null);
-    document.getElementById('dashboard').classList.add('d-none');
-    document.getElementById('authSection').classList.remove('d-none');
-    show('login');
-    Swal.fire('Logged out', 'See you soon!', 'info');
-  };
+    const container = document.createElement('div');
+    container.style.padding = '20px';
+    container.style.background = '#fff';
+    container.style.fontSize = '12px';
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    const canvas = await html2canvas(container, {
+      scale: 3,
+      useCORS: true,
+      logging: false
+    });
+
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    let position = 0;
+
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`${section}.pdf`);
+    document.body.removeChild(container);
+  }
+
+  // ==== UTILITIES ====
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[s]);
+  }
+  function escapeAttr(str) {
+    return String(escapeHtml(str)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ==== INITIAL LOAD ====
+  window.onload = () => showSection('dashboard');
 </script>
+
 </body>
 </html>
